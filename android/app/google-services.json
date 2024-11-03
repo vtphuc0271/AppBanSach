@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "613942636762",
+    "project_id": "bansachnhom2",
+    "storage_bucket": "bansachnhom2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613942636762:android:36c700888b376630d5b5e3",
+        "android_client_info": {
+          "package_name": "com.bansachhqt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYkXBsB7mktWe0rXH-Wkbvel8v3Y7j3a8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
