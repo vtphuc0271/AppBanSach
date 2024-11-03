@@ -1,4 +1,4 @@
-import React, {useState, useContext} from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,15 +10,15 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {UserContext} from '../context/UserContext';
+import { useNavigation } from '@react-navigation/native';
+import { UserContext } from '../context/UserContext';
 import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/auth';
 import NotificationCard from './NotificationCard';
 
-const NarbarCard = ({ScreenName}) => {
+const NarbarCard = ({ ScreenName }) => {
   const navigation = useNavigation();
-  const {user} = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const [isMenuVisible, setMenuVisible] = useState(false);
 
   const [showNotification, setShowNotification] = useState(false);
@@ -116,7 +116,7 @@ const NarbarCard = ({ScreenName}) => {
         <Animated.View
           style={[
             styles.menuContainer,
-            {transform: [{translateX: slideAnim}]},
+            { transform: [{ translateX: slideAnim }] },
           ]}>
           {/*menu người dùng*/}
           {quanTri === false ? (
@@ -127,7 +127,7 @@ const NarbarCard = ({ScreenName}) => {
                   navigation.navigate('MainScreen');
                   closeMenu();
                 }}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenutrangchu.png')}
                   style={styles.icon}
@@ -142,7 +142,7 @@ const NarbarCard = ({ScreenName}) => {
                   navigation.navigate('CartScreen');
                   closeMenu();
                 }}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/Iconmenugiohang.png')}
                   style={styles.icon}
@@ -152,7 +152,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/Iconmenudanhsachdonhang.png')}
                   style={styles.icon}
@@ -162,7 +162,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenuthongtincanhan.png')}
                   style={styles.icon}
@@ -173,7 +173,7 @@ const NarbarCard = ({ScreenName}) => {
 
               {/* menu shipper/nhân viên */}
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenudonhang.png')}
                   style={styles.icon}
@@ -183,7 +183,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenudonhang.png')}
                   style={styles.icon}
@@ -193,7 +193,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenudanhsachdonhangcangiao.png')}
                   style={styles.icon}
@@ -206,7 +206,7 @@ const NarbarCard = ({ScreenName}) => {
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => handleQuanTri()}>
-                  <View style={{paddingLeft: 20}}></View>
+                  <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantri.png')}
                     style={styles.icon}
@@ -221,17 +221,17 @@ const NarbarCard = ({ScreenName}) => {
               <TouchableOpacity
                 style={styles.buttonMenuContent}
                 onPress={() => handleQuanTri()}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenutrangchu.png')}
                   style={styles.icon}
                   resizeMode="contain"
                 />
-                <Text style={styles.menuItem}>Menu trang chủ</Text>
+                <Text style={styles.menuItem}>Menu người dùng</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>navigation.navigate('bookscreen')}>
-                <View style={{paddingLeft: 20}}></View>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => navigation.navigate('bookscreen')}>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenusach.png')}
                   style={styles.icon}
@@ -240,8 +240,11 @@ const NarbarCard = ({ScreenName}) => {
                 <Text style={styles.menuItem}>Sách</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>navigation.navigate('PublisherManagementScreen')}>
-                <View style={{paddingLeft: 20}}></View>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => {
+                navigation.navigate('PublisherManagementScreen');
+                closeMenu();
+              }}>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenunhaxuatban.png')}
                   style={styles.icon}
@@ -251,7 +254,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenutheloai.png')}
                   style={styles.icon}
@@ -261,7 +264,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenutacgia.png')}
                   style={styles.icon}
@@ -271,7 +274,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenuquantringuoidung.png')}
                   style={styles.icon}
@@ -281,7 +284,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenuquantri.png')}
                   style={styles.icon}
@@ -291,7 +294,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenulichsugiaodich.png')}
                   style={styles.icon}
@@ -301,7 +304,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenuquantri.png')}
                   style={styles.icon}
@@ -311,7 +314,7 @@ const NarbarCard = ({ScreenName}) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{paddingLeft: 20}}></View>
+                <View style={{ paddingLeft: 20 }}></View>
                 <Image
                   source={require('../assets/iconmenuquantri.png')}
                   style={styles.icon}
@@ -325,7 +328,7 @@ const NarbarCard = ({ScreenName}) => {
           <TouchableOpacity
             style={styles.buttonMenuContent}
             onPress={handleAuthPress}>
-            <View style={{paddingLeft: 20}} />
+            <View style={{ paddingLeft: 20 }} />
             <Image
               source={require('../assets/iconmenuquantri.png')}
               style={styles.icon}
@@ -340,7 +343,7 @@ const NarbarCard = ({ScreenName}) => {
           <TouchableOpacity
             onPress={handleHideNotification}
             style={[
-              {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
+              { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
             ]}>
             <NotificationCard
               type={notificationType}
@@ -354,7 +357,7 @@ const NarbarCard = ({ScreenName}) => {
   );
 };
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
