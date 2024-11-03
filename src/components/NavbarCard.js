@@ -230,8 +230,15 @@ const NarbarCard = ({ ScreenName }) => {
                 <Text style={styles.menuItem}>Menu người dùng</Text>
               </TouchableOpacity>
 
+<<<<<<< HEAD
               <TouchableOpacity style={styles.buttonMenuContent} onPress={() => navigation.navigate('bookscreen')}>
                 <View style={{ paddingLeft: 20 }}></View>
+=======
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                onPress={() => navigation.navigate('bookscreen')}>
+                <View style={{paddingLeft: 20}}></View>
+>>>>>>> feature/GioHang
                 <Image
                   source={require('../assets/iconmenusach.png')}
                   style={styles.icon}
@@ -240,11 +247,21 @@ const NarbarCard = ({ ScreenName }) => {
                 <Text style={styles.menuItem}>Sách</Text>
               </TouchableOpacity>
 
+<<<<<<< HEAD
               <TouchableOpacity style={styles.buttonMenuContent} onPress={() => {
                 navigation.navigate('PublisherManagementScreen');
                 closeMenu();
               }}>
                 <View style={{ paddingLeft: 20 }}></View>
+=======
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                onPress={() => {
+                  navigation.navigate('PublisherManagementScreen');
+                  closeMenu();
+                }}>
+                <View style={{paddingLeft: 20}}></View>
+>>>>>>> feature/GioHang
                 <Image
                   source={require('../assets/iconmenunhaxuatban.png')}
                   style={styles.icon}
