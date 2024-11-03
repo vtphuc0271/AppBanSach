@@ -230,7 +230,9 @@ const NarbarCard = ({ScreenName}) => {
                 <Text style={styles.menuItem}>Menu trang chủ</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>navigation.navigate('bookscreen')}>
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                onPress={() => navigation.navigate('bookscreen')}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenusach.png')}
@@ -240,7 +242,12 @@ const NarbarCard = ({ScreenName}) => {
                 <Text style={styles.menuItem}>Sách</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>navigation.navigate('PublisherManagementScreen')}>
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                onPress={() => {
+                  navigation.navigate('PublisherManagementScreen');
+                  closeMenu();
+                }}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenunhaxuatban.png')}
