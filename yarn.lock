@@ -1571,6 +1571,11 @@
   resolved "https://registry.npmjs.org/@protobufjs/utf8/-/utf8-1.1.0.tgz"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
+"@react-native-community/checkbox@^0.5.17":
+  version "0.5.17"
+  resolved "https://registry.npmjs.org/@react-native-community/checkbox/-/checkbox-0.5.17.tgz"
+  integrity sha512-ZZx/eOH3SIxBg+hvA2zRd7lX5zPQEWcZU8C8Dn7WLdpJkiTkPmIUDFHWrmzxCnwZcyoD+BIt6gUZPKGGb9WmeQ==
+
 "@react-native-community/cli-clean@14.1.0":
   version "14.1.0"
   dependencies:
@@ -1691,25 +1696,30 @@
     prompts "^2.4.2"
     semver "^7.5.2"
 
-"@react-native-firebase/app@^21.2.0", "@react-native-firebase/app@21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@react-native-firebase/app/-/app-21.2.0.tgz"
-  integrity sha512-3lkJNWHU5Iod6n1k9Q6VmCbI84D5M/pVSwaRtxc3sf/c2eU7Bdrhv6ql4Sv3+2TqdQ4FMD9wqTBrFkJHchhfTw==
+"@react-native-firebase/app@^21.3.0", "@react-native-firebase/app@21.3.0":
+  version "21.3.0"
+  resolved "https://registry.npmjs.org/@react-native-firebase/app/-/app-21.3.0.tgz"
+  integrity sha512-9Y1LzXuH8Aaa306awzX1493NqzvXqEfllPt0FJTZ+u9f7SXP5pIgcjupnROU8jKYmQQ7wi64T+dhjwPSe01QWg==
   dependencies:
     firebase "10.13.2"
     superstruct "^0.6.2"
 
-"@react-native-firebase/auth@^21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@react-native-firebase/auth/-/auth-21.2.0.tgz"
-  integrity sha512-dC9EwXZTk+DPL0OGv9JsZnrsiG+V0xfPozYigwlvdWtevVd2bCbHDbZd4TFDuV+AtM1AIxWKAflUw0kLIcBDew==
+"@react-native-firebase/auth@^21.3.0":
+  version "21.3.0"
+  resolved "https://registry.npmjs.org/@react-native-firebase/auth/-/auth-21.3.0.tgz"
+  integrity sha512-+AJpcqLZL9YZV/hU33K/d7Y1K5stK4Ob0f+46xfjUl0z31ZsTCW6+RvtsG8a/T3G2tlFu5Bf0mXeRk3i234xFA==
   dependencies:
     plist "^3.1.0"
 
-"@react-native-firebase/firestore@^21.2.0":
-  version "21.2.0"
-  resolved "https://registry.npmjs.org/@react-native-firebase/firestore/-/firestore-21.2.0.tgz"
-  integrity sha512-qfN4qu4w2ZMCskkFUdyTjzq9U7EYiA2q38rRzkrv0Wkd6p5SzHtHW147YW0H67/MxELOBeI6yGTnKt56BKlxMA==
+"@react-native-firebase/firestore@^21.3.0":
+  version "21.3.0"
+  resolved "https://registry.npmjs.org/@react-native-firebase/firestore/-/firestore-21.3.0.tgz"
+  integrity sha512-b1bB8sXRM8ayAiU0zfcnsK6+JHWkdSuFfg0YZfejSibGgd4hStyc6thkoPXWmFPttvKydwvb5XnRO3vheR1PoA==
+
+"@react-native-firebase/storage@^21.3.0":
+  version "21.3.0"
+  resolved "https://registry.npmjs.org/@react-native-firebase/storage/-/storage-21.3.0.tgz"
+  integrity sha512-L9FXEVT/aao0kflOwd/yexqEsructBUdNoCHy0d3IUX82XR/6bAYVfBoNfRSZe2S+t8LRYZzFLnrh+CG7wDgxQ==
 
 "@react-native/assets-registry@0.75.4":
   version "0.75.4"
@@ -4912,6 +4922,11 @@ react-native-gesture-handler@^2.20.2, "react-native-gesture-handler@>= 1.0.0":
     invariant "^2.2.4"
     prop-types "^15.7.2"
 
+react-native-image-picker@^7.1.2:
+  version "7.1.2"
+  resolved "https://registry.npmjs.org/react-native-image-picker/-/react-native-image-picker-7.1.2.tgz"
+  integrity sha512-b5y5nP60RIPxlAXlptn2QwlIuZWCUDWa/YPUVjgHc0Ih60mRiOg1PSzf0IjHSLeOZShCpirpvSPGnDExIpTRUg==
+
 react-native-safe-area-context@^4.12.0, "react-native-safe-area-context@>= 3.0.0":
   version "4.12.0"
   resolved "https://registry.npmjs.org/react-native-safe-area-context/-/react-native-safe-area-context-4.12.0.tgz"
@@ -4925,7 +4940,7 @@ react-native-screens@^3.35.0, "react-native-screens@>= 3.0.0":
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native@*, react-native@0.75.4:
+react-native@*, "react-native@>= 0.62", react-native@0.75.4:
   version "0.75.4"
   dependencies:
     "@jest/create-cache-key-function" "^29.6.3"
