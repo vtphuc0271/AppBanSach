@@ -240,7 +240,7 @@ const NarbarCard = ({ScreenName}) => {
                 <Text style={styles.menuItem}>Sách</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent}>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>navigation.navigate('PublisherManagementScreen')}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenunhaxuatban.png')}
