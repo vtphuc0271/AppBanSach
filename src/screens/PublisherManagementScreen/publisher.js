@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Image,
+  Alert,
+  Modal,
+} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import { launchImageLibrary } from 'react-native-image-picker';
-
+import {launchImageLibrary} from 'react-native-image-picker';
+import NavbarCard from '../../components/NavbarCard';
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [searchText, setSearchText] = useState('');
@@ -16,29 +26,32 @@ const CategoryList = () => {
   useEffect(() => {
     const unsubscribe = firestore()
       .collection('NhaXuatBan')
-      .onSnapshot(snapshot => {
-        const publisherList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setCategories(publisherList);
-      }, error => {
-        console.error('Error fetching Firestore data: ', error);
-      });
+      .onSnapshot(
+        snapshot => {
+          const publisherList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setCategories(publisherList);
+        },
+        error => {
+          console.error('Error fetching Firestore data: ', error);
+        },
+      );
     return () => unsubscribe();
   }, []);
 
-  const toggleDisplay = async (id) => {
+  const toggleDisplay = async id => {
     const publisher = categories.find(cat => cat.id === id);
     if (publisher) {
       await firestore()
         .collection('NhaXuatBan')
         .doc(id)
-        .update({ displayed: !publisher.displayed });
+        .update({displayed: !publisher.displayed});
     }
   };
 
-  const handleEdit = (id) => {
+  const handleEdit = id => {
     const publisher = categories.find(cat => cat.id === id);
     if (publisher) {
       setEditPublisherId(id);
@@ -49,11 +62,8 @@ const CategoryList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    await firestore()
-      .collection('NhaXuatBan')
-      .doc(id)
-      .delete();
+  const handleDelete = async id => {
+    await firestore().collection('NhaXuatBan').doc(id).delete();
   };
 
   const handleAddNew = async () => {
@@ -66,7 +76,7 @@ const CategoryList = () => {
       await firestore()
         .collection('NhaXuatBan')
         .doc(editPublisherId)
-        .update({ name: newPublisherName, image: newPublisherImage })
+        .update({name: newPublisherName, image: newPublisherImage})
         .then(() => {
           console.log('Publisher updated!');
         })
@@ -109,7 +119,7 @@ const CategoryList = () => {
       mediaType: 'photo',
       quality: 1,
     };
-    launchImageLibrary(options, async (response) => {
+    launchImageLibrary(options, async response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.error) {
@@ -129,95 +139,132 @@ const CategoryList = () => {
     });
   };
 
-  const filteredCategories = categories.filter(cat => 
-    cat.name && typeof cat.name === 'string' && 
-    cat.name.toLowerCase().includes(searchText?.toLowerCase() || '')
-);
-
+  const filteredCategories = categories.filter(
+    cat =>
+      cat.name &&
+      typeof cat.name === 'string' &&
+      cat.name.toLowerCase().includes(searchText?.toLowerCase() || ''),
+  );
 
   return (
     <View style={styles.container}>
-      <View style={styles.header1}>
-        <Text style={styles.headerText}>Danh sách nhà xuất bản</Text>
-      </View>
-      <View style={styles.header}>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-            <Text style={styles.buttonText}>+ Thêm mới</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
-            <Text style={styles.buttonText}>Xóa tất cả</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.searchContainer}>
-          <TextInput
-            placeholder="Tìm kiếm"
-            placeholderTextColor="#000"
-            style={styles.searchInput}
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-        </View>
-      </View>
-      <View style={styles.listHeader}>
-  <Text style={[styles.headerItem, { flex: 1.3 }]}>STT</Text>
-  <Text style={[styles.headerItem, { flex: 1.1 }]}>Ảnh</Text>
-  <Text style={[styles.headerItem, { flex: 3 }]}>Tên nhà xuất bản</Text>
-  <Text style={[styles.headerItem, { flex: 2 }]}>Thao tác</Text>
-</View>
-<ScrollView>
-  {filteredCategories.map((category, index) => (
-    <View key={category.id} style={styles.categoryRow}>
-      <Text style={[styles.categoryId, { flex: 0 }]}>{index + 1}</Text>
-      <View style={[styles.imageContainer, { flex: 1 }]}>
-        <Image source={{ uri: category.image }} style={styles.categoryImage} />
-      </View>
-      <Text style={[styles.categoryName, { flex: 3 }]}>{category.name}</Text>
-      <View style={[styles.actionIcons, { flex: 2 }]}>
-        <TouchableOpacity onPress={() => handleEdit(category.id)}>
-          <Image source={require('../../assets/edit.png')} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDelete(category.id)}>
-          <Image source={require('../../assets/delete.png')} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  ))}
-</ScrollView>
-
-      {/* Modal để thêm nhà xuất bản */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => { setModalVisible(!modalVisible); }}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>{isEditing ? 'Chỉnh sửa Nhà Xuất Bản' : 'Thêm Nhà Xuất Bản'}</Text>
-            <TextInput
-              placeholder="Tên nhà xuất bản"
-              placeholderTextColor="#000"
-              style={styles.input}
-              value={newPublisherName}
-              onChangeText={setNewPublisherName}
-            />
-            <TouchableOpacity style={{borderWidth:3,width:120,height:120,justifyContent:'center',alignSelf:'center',alignItems:'center',marginBottom:20,borderRadius:5,borderColor:'#969292'}} onPress={selectImage}>
-              {newPublisherImage ? (
-                <Image source={{ uri: newPublisherImage }} style={{ width: 100, height: 100,margin: 10}} />
-              ) : (
-                <Image source={require('../../assets/default.png')} style={{ width: 100, height: 100 ,margin: 10 }} />
-              )}
+      <NavbarCard ScreenName={'Nhà xuất bản'}></NavbarCard>
+      <View style={styles.container2}>
+        <View style={styles.header}>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setModalVisible(true)}>
+              <Text style={styles.buttonText}>+ Thêm mới</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: 'green' }]} onPress={handleAddNew}>
-              <Text style={styles.buttonText}>{isEditing ? 'Chỉnh sửa' : 'Thêm'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={() => setModalVisible(false)}>
-              <Text style={styles.buttonText}>Đóng</Text>
+            <TouchableOpacity
+              style={styles.deleteAllButton}
+              onPress={handleDeleteAll}>
+              <Text style={styles.buttonText}>Xóa tất cả</Text>
             </TouchableOpacity>
           </View>
+          <View style={styles.searchContainer}>
+            <TextInput
+              placeholder="Tìm kiếm"
+              placeholderTextColor="#000"
+              style={styles.searchInput}
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+          </View>
         </View>
-      </Modal>
+        <View style={styles.listHeader}>
+          <Text style={[styles.headerItem, {flex: 1.3}]}>STT</Text>
+          <Text style={[styles.headerItem, {flex: 1.1}]}>Ảnh</Text>
+          <Text style={[styles.headerItem, {flex: 3}]}>Tên nhà xuất bản</Text>
+          <Text style={[styles.headerItem, {flex: 2}]}>Thao tác</Text>
+        </View>
+        <ScrollView>
+          {filteredCategories.map((category, index) => (
+            <View key={category.id} style={styles.categoryRow}>
+              <Text style={[styles.categoryId, {flex: 0}]}>{index + 1}</Text>
+              <View style={[styles.imageContainer, {flex: 1}]}>
+                <Image
+                  source={{uri: category.image}}
+                  style={styles.categoryImage}
+                />
+              </View>
+              <Text style={[styles.categoryName, {flex: 3}]}>
+                {category.name}
+              </Text>
+              <View style={[styles.actionIcons, {flex: 2}]}>
+                <TouchableOpacity onPress={() => handleEdit(category.id)}>
+                  <Image source={require('../../assets/edit.png')} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(category.id)}>
+                  <Image source={require('../../assets/delete.png')} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Modal để thêm nhà xuất bản */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(!modalVisible);
+          }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalText}>
+                {isEditing ? 'Chỉnh sửa Nhà Xuất Bản' : 'Thêm Nhà Xuất Bản'}
+              </Text>
+              <TextInput
+                placeholder="Tên nhà xuất bản"
+                placeholderTextColor="#000"
+                style={styles.input}
+                value={newPublisherName}
+                onChangeText={setNewPublisherName}
+              />
+              <TouchableOpacity
+                style={{
+                  borderWidth: 3,
+                  width: 120,
+                  height: 120,
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                  alignItems: 'center',
+                  marginBottom: 20,
+                  borderRadius: 5,
+                  borderColor: '#969292',
+                }}
+                onPress={selectImage}>
+                {newPublisherImage ? (
+                  <Image
+                    source={{uri: newPublisherImage}}
+                    style={{width: 100, height: 100, margin: 10}}
+                  />
+                ) : (
+                  <Image
+                    source={require('../../assets/default.png')}
+                    style={{width: 100, height: 100, margin: 10}}
+                  />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, {backgroundColor: 'green'}]}
+                onPress={handleAddNew}>
+                <Text style={styles.buttonText}>
+                  {isEditing ? 'Chỉnh sửa' : 'Thêm'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, {backgroundColor: 'red'}]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={styles.buttonText}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
     </View>
   );
 };
@@ -225,7 +272,11 @@ const CategoryList = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#fff',
+  },
+  container2: {
+    flex: 1,
+    padding: 10,
     backgroundColor: '#fff',
   },
   header1: {
@@ -275,7 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   searchInput: {
-    width: 110,
+    width: '40%',
     height: 40,
     color: '#000',
   },
