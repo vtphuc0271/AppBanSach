@@ -260,7 +260,11 @@ const NarbarCard = ({ScreenName, iconShop = false }) => {
                 <Text style={styles.menuItem}>Nhà xuất bản</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => navigation.navigate('AdminCatagoryScreen')}>
+              <TouchableOpacity style={styles.buttonMenuContent} 
+                onPress={() => {
+                  navigation.navigate('AdminCatagoryScreen');
+                  closeMenu();
+                }}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenutheloai.png')}
