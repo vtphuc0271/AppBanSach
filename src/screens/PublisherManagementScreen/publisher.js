@@ -148,7 +148,9 @@ const CategoryList = () => {
 
   return (
     <View style={styles.container}>
-      <NavbarCard ScreenName={'Nhà xuất bản'}></NavbarCard>
+      <NavbarCard ScreenName={'Nhà xuất bản'}
+       iconShop={true}>
+       </NavbarCard>
       <View style={styles.container2}>
         <View style={styles.header}>
           <View style={styles.actionButtons}>

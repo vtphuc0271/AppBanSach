@@ -16,7 +16,7 @@ import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/auth';
 import NotificationCard from './NotificationCard';
 
-const NarbarCard = ({ScreenName}) => {
+const NarbarCard = ({ScreenName, iconShop = false }) => {
   const navigation = useNavigation();
   const {user} = useContext(UserContext);
   const [isMenuVisible, setMenuVisible] = useState(false);
@@ -88,22 +88,24 @@ const NarbarCard = ({ScreenName}) => {
 
       <Text style={styles.screenName}>{ScreenName}</Text>
 
-      <View style={styles.iconContainer}>
-        <TouchableOpacity>
-          <Image
-            source={require('../assets/notificationicon.png')}
-            style={styles.icon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            source={require('../assets/shopicon.png')}
-            style={styles.icon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
+      {iconShop == false ? (<>
+        <View style={styles.iconContainer}>
+          <TouchableOpacity>
+            <Image
+              source={require('../assets/notificationicon.png')}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Image
+              source={require('../assets/shopicon.png')}
+              style={styles.icon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </>) : null}
 
       {/* Modal Menu */}
       <Modal visible={isMenuVisible} transparent={true}>
@@ -258,7 +260,7 @@ const NarbarCard = ({ScreenName}) => {
                 <Text style={styles.menuItem}>Nhà xuất bản</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent}>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => navigation.navigate('AdminCatagoryScreen')}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenutheloai.png')}
