@@ -6,6 +6,7 @@ import LoginScreen from './src/screens/LoginScreen/login';
 import RegisterScreen from './src/screens/RegisterScreen/register';
 import { UserProvider } from './src/context/UserContext.js';
 import PublisherManagementScreen from './src/screens/PublisherManagementScreen/publisher.js';
+import AuthorManagementScreen from './src/screens/AuthorManagementScreen/author.js';
 import CartScreen from './src/screens/CartScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
 const Stack = createStackNavigator();
@@ -23,6 +24,7 @@ export default function App() {
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
+          <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
