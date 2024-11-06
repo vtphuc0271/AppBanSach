@@ -54,10 +54,10 @@ const NarbarCard = ({ScreenName, iconShop = false }) => {
 
   const closeMenu = () => {
     Animated.timing(slideAnim, {
-      toValue: -Dimensions.get('window').width * 0.75, // Trượt ra ngoài màn hình
+      toValue: -Dimensions.get('window').width * 0.75,
       duration: 300,
       useNativeDriver: false,
-    }).start(() => setMenuVisible(false)); // Đóng menu khi hoàn tất animation
+    }).start(() => setMenuVisible(false));
   };
 
   const handleAuthPress = () => {
@@ -86,7 +86,7 @@ const NarbarCard = ({ScreenName, iconShop = false }) => {
         />
       </TouchableOpacity>
 
-      <Text style={styles.screenName}>{ScreenName}</Text>
+      <Text style={[styles.screenName,{marginRight: iconShop == true ? 40 : -40}]}>{ScreenName}</Text>
 
       {iconShop == false ? (<>
         <View style={styles.iconContainer}>
@@ -274,7 +274,7 @@ const NarbarCard = ({ScreenName, iconShop = false }) => {
                 <Text style={styles.menuItem}>Thể loại</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent}>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>{navigation.navigate("AuthorManagementScreen");closeMenu();}}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenutacgia.png')}
@@ -393,7 +393,6 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
     textAlign: 'center',
-    marginLeft: 40,
   },
   iconContainer: {
     flexDirection: 'row',

@@ -23,8 +23,6 @@ const CategoryList = () => {
     const [editPublisherId, setEditPublisherId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [newPublisherBirthYear, setNewPublisherBirthYear] = useState('');
-    const [newPublisherContact, setNewPublisherContact] = useState('');
-    const [newPublisherDescription, setNewPublisherDescription] = useState('');
 
 
     useEffect(() => {
@@ -45,15 +43,6 @@ const CategoryList = () => {
         return () => unsubscribe();
     }, []);
 
-    const toggleDisplay = id => {
-        setCategories(prevCategories =>
-            prevCategories.map(cat =>
-                cat.id === id ? { ...cat, isExpanded: !cat.isExpanded } : cat
-            )
-        );
-    };
-
-
 
 
     const handleEdit = id => {
@@ -63,8 +52,6 @@ const CategoryList = () => {
             setNewPublisherName(publisher.name); 
             setNewPublisherImage(publisher.image);
             setNewPublisherBirthYear(publisher.birthYear);       
-            setNewPublisherContact(publisher.contactInfo);        
-            setNewPublisherDescription(publisher.description);    
             setIsEditing(true);
             setModalVisible(true);
         }
@@ -84,8 +71,6 @@ const CategoryList = () => {
             name: newPublisherName,
             image: newPublisherImage || 'default.png',
             birthYear: newPublisherBirthYear,
-            contactInfo: newPublisherContact,
-            description: newPublisherDescription,
         };
 
         if (isEditing) {
@@ -115,8 +100,6 @@ const CategoryList = () => {
         setNewPublisherName('');
         setNewPublisherImage('');
         setNewPublisherBirthYear('');
-        setNewPublisherContact('');
-        setNewPublisherDescription('');
         setIsEditing(false);
         setEditPublisherId(null);
     };
@@ -165,7 +148,7 @@ const CategoryList = () => {
 
     return (
         <View style={styles.container}>
-            <NavbarCard ScreenName={'Tác giả'}></NavbarCard>
+            <NavbarCard ScreenName={'Tác giả'} iconShop={true}></NavbarCard>
             <View style={styles.container2}>
                 <View style={styles.header}>
                     <View style={styles.actionButtons}>
@@ -200,7 +183,6 @@ const CategoryList = () => {
                     {filteredCategories.map((category, index) => (
                         <TouchableOpacity
                             key={category.id}
-                            onPress={() => toggleDisplay(category.id)} // Thêm sự kiện nhấn
                             style={styles.categoryRow}
                         >
                             <Text style={[styles.categoryId, { flex: 0 }]}>{index + 1}</Text>
@@ -213,13 +195,6 @@ const CategoryList = () => {
                             <View style={{ flex: 3 }}>
                                 <Text style={styles.categoryName}>{category.name}</Text>
                                 <Text style={styles.categoryBirthYear}>{category.birthYear}</Text>
-                                {/* Hiển thị thông tin mở rộng khi isExpanded = true */}
-                                {category.isExpanded && (
-                                    <View style={styles.expandedInfo}>
-                                        <Text>Thông tin: {category.contactInfo}</Text>
-                                        <Text>Mô tả:  {category.description}</Text>
-                                    </View>
-                                )}
                             </View>
                             <View style={[styles.actionIcons, { flex: 2 }]}>
                                 <TouchableOpacity onPress={() => handleEdit(category.id)}>
@@ -292,25 +267,6 @@ const CategoryList = () => {
                                 keyboardType="numeric"
                                 value={newPublisherBirthYear}
                                 onChangeText={setNewPublisherBirthYear}
-                            />
-
-                            {/* Trường nhập thông tin liên hệ */}
-                            <TextInput
-                                placeholder="Thông tin liên hệ"
-                                placeholderTextColor="#000"
-                                style={styles.input}
-                                value={newPublisherContact}
-                                onChangeText={setNewPublisherContact}
-                            />
-
-                            {/* Trường nhập mô tả tác giả */}
-                            <TextInput
-                                placeholder="Mô tả tác giả"
-                                placeholderTextColor="#000"
-                                style={[styles.input, { height: 80 }]}
-                                multiline
-                                value={newPublisherDescription}
-                                onChangeText={setNewPublisherDescription}
                             />
 
                             {/* Nút thêm hoặc chỉnh sửa */}
@@ -391,10 +347,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#f1f1f1',
         paddingHorizontal: 10,
+        width:"40%",
         borderRadius: 5,
     },
     searchInput: {
-        width: '40%',
+        width: '100%',
         height: 40,
         color: '#000',
     },

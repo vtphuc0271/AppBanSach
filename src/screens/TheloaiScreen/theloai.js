@@ -140,7 +140,7 @@ const CategoryList = () => {
     <View style={styles.container}>
       {/* Header */}
       <NavbarCard
-        ScreenName={'Danh sách Thể loại'}
+        ScreenName={'Thể loại'}
         iconShop={true}>
       </NavbarCard>
       <View style={styles.container2}>
