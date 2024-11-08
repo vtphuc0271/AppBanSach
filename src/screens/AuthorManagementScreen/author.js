@@ -104,7 +104,6 @@ const CategoryList = () => {
         setEditPublisherId(null);
     };
 
-
     const handleDeleteAll = async () => {
         const batch = firestore().batch();
         categories.forEach(category => {
@@ -249,7 +248,6 @@ const CategoryList = () => {
                                     />
                                 )}
                             </TouchableOpacity>
-
                             {/* Trường nhập tên tác giả */}
                             <TextInput
                                 placeholder="Tên tác giả"

@@ -234,7 +234,9 @@ const NarbarCard = ({ScreenName, iconShop = false }) => {
 
               <TouchableOpacity
                 style={styles.buttonMenuContent}
-                onPress={() => navigation.navigate('bookscreen')}>
+                  onPress={() => {navigation.navigate('BookManagementScreen')
+                  closeMenu();
+                }}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenusach.png')}

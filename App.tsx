@@ -9,6 +9,7 @@ import PublisherManagementScreen from './src/screens/PublisherManagementScreen/p
 import AuthorManagementScreen from './src/screens/AuthorManagementScreen/author.js';
 import CartScreen from './src/screens/CartScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
+import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
+          <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
         </Stack.Navigator>
       </NavigationContainer>
