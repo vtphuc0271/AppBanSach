@@ -13,7 +13,6 @@ import '@react-native-firebase/firestore';
 import NotificationCard from '../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
 
-
 export default function App() {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -33,7 +32,9 @@ export default function App() {
         setNotificationType('success');
         setNotificationMessage('Bạn đã đăng nhập thành công!');
         setShowNotification(true);
-        navigation.navigate('MainScreen');
+        setTimeout(() => {
+          navigation.navigate('MainScreen');
+        }, 1000);
       })
       .catch(error => {
         console.log('Error code: ', error.code);
@@ -53,6 +54,7 @@ export default function App() {
             'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!',
           );
         }
+        
 
         setNotificationType('error');
         setShowNotification(true);
@@ -152,7 +154,9 @@ export default function App() {
 
       <View style={styles.register}>
         <Text style={styles.registerText}>Chưa có tài khoản?</Text>
-        <TouchableOpacity disabled={loading}>
+        <TouchableOpacity
+          disabled={loading}
+          onPress={() => navigation.navigate('RegisterScreen')}>
           <Text style={styles.registerLink}>Đăng ký</Text>
         </TouchableOpacity>
       </View>

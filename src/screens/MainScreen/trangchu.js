@@ -12,39 +12,99 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
 import {UserContext} from '../../context/UserContext';
-const data = [
-  {
-    id: '1',
-    title: 'Clean code',
-    author: 'Robert C. Martin',
-    price: '324.000 VNĐ',
-    rating: 4,
-    votes: 211,
-    details: {
-      part: 1,
-      edition: 1,
-      printFormat: 'Bìa mềm',
-      category: 'Computers - Programming',
-      pages: 462,
-      dimensions: '16x24 cm',
-      published: 2009,
-      language: 'English',
-      publisher: 'Tri Thức Trẻ Books & NXB Dân Trí',
-    },
-    image: require('../../assets/cleancode.png'),
-  },
-  {
-    id: '2',
-    title: 'Hạt giống tâm hồn',
-    author: 'Nhiều tác giả',
-    price: '230.000 VNĐ',
-    rating: 5,
-    votes: 211,
-    image: require('../../assets/hatgiongtanhon.png'),
-  },
-];
 
 const TrangChuScreen = () => {
+  const [data, setData] = useState([
+    {
+      id: '1',
+      title: 'Clean code',
+      author: 'Robert C. Martin',
+      price: 324000,
+      rating: 4,
+      votes: 211,
+      details: {
+        part: 1,
+        edition: 1,
+        printFormat: 'Bìa mềm',
+        category: 'Computers - Programming',
+        pages: 462,
+        dimensions: '16x24 cm',
+        published: 2009,
+        language: 'English',
+        publisher: 'Tri Thức Trẻ Books & NXB Dân Trí',
+      },
+      image: require('../../assets/cleancode.png'),
+    },
+    {
+      id: '2',
+      title: 'The Pragmatic Programmer',
+      author: 'Andrew Hunt, David Thomas',
+      price: 295000,
+      rating: 4.5,
+      votes: 178,
+      details: {
+        part: 1,
+        edition: 2,
+        printFormat: 'Bìa mềm',
+        category: 'Computers - Programming',
+        pages: 352,
+        dimensions: '15x23 cm',
+        published: 2019,
+        language: 'English',
+        publisher: 'Tri Thức Trẻ Books & NXB Lao Động',
+      },
+      image: require('../../assets/cleancode.png'),
+    },
+    {
+      id: '3',
+      title: 'Design Patterns: Elements of Reusable Object-Oriented Software',
+      author: 'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides',
+      price: 410000,
+      rating: 4.3,
+      votes: 312,
+      details: {
+        part: 1,
+        edition: 1,
+        printFormat: 'Bìa cứng',
+        category: 'Computers - Programming',
+        pages: 416,
+        dimensions: '18x26 cm',
+        published: 1994,
+        language: 'English',
+        publisher: 'Tri Thức Trẻ Books & NXB Khoa Học Kỹ Thuật',
+      },
+      image: require('../../assets/cleancode.png'),
+    },
+    {
+      id: '4',
+      title: 'Refactoring: Improving the Design of Existing Code',
+      author: 'Martin Fowler',
+      price: 389000,
+      rating: 4.6,
+      votes: 256,
+      details: {
+        part: 1,
+        edition: 2,
+        printFormat: 'Bìa mềm',
+        category: 'Computers - Programming',
+        pages: 448,
+        dimensions: '17x25 cm',
+        published: 2018,
+        language: 'English',
+        publisher: 'Tri Thức Trẻ Books & NXB Công Nghệ',
+      },
+      image: require('../../assets/cleancode.png'),
+    },
+    {
+      id: '5',
+      title: 'Hạt giống tâm hồn',
+      author: 'Nhiều tác giả',
+      price: 230000,
+      rating: 5,
+      votes: 211,
+      image: require('../../assets/hatgiongtanhon.png'),
+    },
+  ]);
   const [searchText, setSearchText] = useState('');
   const [expandedItem, setExpandedItem] = useState(null);
   const [sortItem, setsortItem] = useState(null);
@@ -53,10 +113,10 @@ const TrangChuScreen = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllAuthors, setShowAllAuthors] = useState(false);
   const [showAllPublishers, setShowAllPublishers] = useState(false);
+  const [sortOption, setSortOption] = useState(null);
 
   const {user} = useContext(UserContext);
-  console.log("day la user: ",user);
-
+  console.log('day la user: ', user);
 
   const toggleFilter = () => {
     setFilterItem(!filterItem);
@@ -70,6 +130,40 @@ const TrangChuScreen = () => {
     if (filterItem == true) {
       setFilterItem(!filterItem);
     }
+  };
+
+  const sortData = () => {
+    const sortedData = [...data];
+    switch (sortOption) {
+      case 'priceAsc':
+        sortedData.sort((a, b) => a.price - b.price);
+        break;
+      case 'priceDesc':
+        sortedData.sort((a, b) => b.price - a.price);
+        break;
+      case 'titleAsc':
+        sortedData.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'ratingHigh':
+        sortedData.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'ratingLow':
+        sortedData.sort((a, b) => a.rating - b.rating);
+        break;
+      case 'popular': // Thêm tiêu chí Thịnh hành
+        sortedData.sort((a, b) => b.votes - a.votes);
+        break;
+      default:
+        break;
+    }
+    setData(sortedData);
+  };
+  useEffect(() => {
+    sortData();
+  }, [sortOption]);
+
+  const handleSortOption = option => {
+    setSortOption(option);
   };
 
   const categories = [
@@ -159,15 +253,19 @@ const TrangChuScreen = () => {
         <View style={styles.row}>
           <Image source={item.image} style={styles.image} />
           <View style={styles.infoContainer}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text>{item.author}</Text>
+            <Text style={[styles.title, {maxWidth: 250, flexWrap: 'wrap'}]}>
+              {item.title}
+            </Text>
+            <Text style={[styles.text, {maxWidth: 250, flexWrap: 'wrap'}]}>
+              {item.author}
+            </Text>
             <View style={styles.ratingContainer}>
               <View style={styles.starContainer}>
                 {renderStars(item.rating)}
               </View>
               <Text style={styles.votes}>({item.votes} lượt đánh giá)</Text>
             </View>
-            <Text style={styles.price}>{item.price}</Text>
+            <Text style={styles.price}>{item.price.toLocaleString()} VNĐ</Text>
             {expandedItem === null && (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.buttonAddToCart}>
@@ -275,22 +373,34 @@ const TrangChuScreen = () => {
       </View>
       {sortItem && (
         <View style={styles.sortOptionsContainer}>
-          <TouchableOpacity style={styles.sortOption}>
+          <TouchableOpacity
+            style={styles.sortOption}
+            onPress={() => handleSortOption('priceAsc')}>
             <Text>Theo giá tăng dần</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
+          <TouchableOpacity
+            style={styles.sortOption}
+            onPress={() => handleSortOption('priceDesc')}>
             <Text>Theo giá giảm dần</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
+          <TouchableOpacity
+            style={styles.sortOption}
+            onPress={() => handleSortOption('titleAsc')}>
             <Text>Sắp xếp A-Z</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
+          <TouchableOpacity
+            style={styles.sortOption}
+            onPress={() => handleSortOption('ratingHigh')}>
             <Text>Đánh giá cao</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
+          <TouchableOpacity
+            style={styles.sortOption}
+            onPress={() => handleSortOption('ratingLow')}>
             <Text>Đánh giá thấp</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
+          <TouchableOpacity
+            style={styles.sortOption}
+            onPress={() => handleSortOption('popular')}>
             <Text>Thịnh hành</Text>
           </TouchableOpacity>
         </View>

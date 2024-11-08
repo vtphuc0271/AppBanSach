@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,10 @@ import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/auth';
 import '@react-native-firebase/firestore';
 import NotificationCard from '../../components/NotificationCard';
+import {useNavigation} from '@react-navigation/native';
 
 export default function App() {
+  const navigation = useNavigation();
   const [hoTen, setHoTen] = useState('');
   const [password, setPassword] = useState('');
   const [repassword, setRePassword] = useState('');
@@ -55,20 +57,27 @@ export default function App() {
 
         setNotificationType('success');
         setNotificationMessage(
-          'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.'
+          'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.',
         );
         setShowNotification(true);
+        setTimeout(() => {
+          navigation.navigate('LoginScreen');
+        }, 1000);
       })
       .catch(error => {
         if (error.code === 'auth/email-already-in-use') {
           setNotificationType('error');
-          setNotificationMessage('Email đã được sử dụng. Vui lòng chọn email khác.');
+          setNotificationMessage(
+            'Email đã được sử dụng. Vui lòng chọn email khác.',
+          );
         } else if (error.code === 'auth/invalid-email') {
           setNotificationType('error');
           setNotificationMessage('Email không hợp lệ.');
         } else if (error.code === 'auth/weak-password') {
           setNotificationType('error');
-          setNotificationMessage('Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.');
+          setNotificationMessage(
+            'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.',
+          );
         } else {
           setNotificationType('error');
           setNotificationMessage('Đăng ký thất bại. Vui lòng thử lại.');
@@ -125,8 +134,7 @@ export default function App() {
       <TouchableOpacity
         style={styles.loginButton}
         onPress={registerUser}
-        disabled={loading}
-      >
+        disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#FFF" />
         ) : (
@@ -136,7 +144,7 @@ export default function App() {
 
       <View style={styles.register}>
         <Text style={styles.registerText}>Bạn đã có tài khoản?</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
           <Text style={styles.registerLink}>Đăng nhập vào đây</Text>
         </TouchableOpacity>
       </View>
@@ -144,8 +152,9 @@ export default function App() {
       {showNotification && (
         <TouchableOpacity
           onPress={handleHideNotification}
-          style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}
-        >
+          style={[
+            {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
+          ]}>
           <NotificationCard
             type={notificationType}
             message={notificationMessage}

@@ -11,13 +11,12 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = firebase.auth().onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
-        try {
-          // Truy xuất thông tin bổ sung từ Firestore
-          const userDoc = await firebase.firestore().collection('NguoiDung').doc(currentUser.uid).get();
-          if (userDoc.exists) {
-            const userData = userDoc.data(); // Lấy dữ liệu từ Firestore
-
-            // Kết hợp dữ liệu từ Auth và Firestore
+        const userDocRef = firebase.firestore().collection('NguoiDung').doc(currentUser.uid);
+        
+        // Sử dụng onSnapshot để cập nhật khi document thay đổi
+        const unsubscribeDoc = userDocRef.onSnapshot(docSnapshot => {
+          if (docSnapshot.exists) {
+            const userData = docSnapshot.data();
             setUser({
               uid: currentUser.uid,
               email: currentUser.email,
@@ -25,22 +24,27 @@ export const UserProvider = ({ children }) => {
               createdAt: userData.createdAt || "",
               hinh: userData.hinh || "",
               maVaiTro: userData.maVaiTro || "",
+              diaChi: userData.diaChi || "",
               soDienThoai: userData.soDienThoai || "",
             });
           } else {
-            console.error("No document found for user with uid: ", currentUser.uid);
-            setUser(null); // Nếu không tìm thấy tài liệu
+            setUser(null); // Không có document thì đặt user là null
           }
-        } catch (error) {
+        }, error => {
           console.error("Error fetching user data: ", error);
-        }
+        });
+  
+        // Cleanup khi unmount
+        return () => unsubscribeDoc();
       } else {
-        setUser(null); // Không có người dùng đăng nhập
+        setUser(null);
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
+  
+  
 
   return (
     <UserContext.Provider value={{ user }}>

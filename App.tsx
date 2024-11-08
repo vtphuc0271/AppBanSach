@@ -7,6 +7,7 @@ import RegisterScreen from './src/screens/RegisterScreen/register';
 import {UserProvider} from './src/context/UserContext.js';
 import PublisherManagementScreen from './src/screens/PublisherManagementScreen/publisher.js';
 import CartScreen from './src/screens/CartScreen/index.js';
+import PaymentScreen from './src/screens/PaymentScreen/index.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
+          <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
