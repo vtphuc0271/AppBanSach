@@ -148,7 +148,9 @@ const CategoryList = () => {
 
   return (
     <View style={styles.container}>
-      <NavbarCard ScreenName={'Nhà xuất bản'}></NavbarCard>
+      <NavbarCard ScreenName={'Nhà xuất bản'}
+       iconShop={true}>
+       </NavbarCard>
       <View style={styles.container2}>
         <View style={styles.header}>
           <View style={styles.actionButtons}>
@@ -171,6 +173,10 @@ const CategoryList = () => {
               value={searchText}
               onChangeText={setSearchText}
             />
+            <Image
+                source={require('../../assets/iconsearch.png')}
+                style={styles.searchIcon}
+              />
           </View>
         </View>
         <View style={styles.listHeader}>
@@ -321,14 +327,20 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    width:"40%",
     backgroundColor: '#f1f1f1',
     paddingHorizontal: 10,
     borderRadius: 5,
   },
   searchInput: {
-    width: '40%',
-    height: 40,
+    width: '100%',
+    height: 45,
     color: '#000',
+  },
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginLeft:-20,
   },
   listHeader: {
     flexDirection: 'row',
