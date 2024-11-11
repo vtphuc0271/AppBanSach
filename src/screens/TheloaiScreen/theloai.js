@@ -140,7 +140,7 @@ const CategoryList = () => {
     <View style={styles.container}>
       {/* Header */}
       <NavbarCard
-        ScreenName={'Danh sách Thể loại'}
+        ScreenName={'Thể loại'}
         iconShop={true}>
       </NavbarCard>
       <View style={styles.container2}>
@@ -357,11 +357,6 @@ const styles = StyleSheet.create({
   searchInput: {
     width: 110,
     height: 40,
-  },
-  searchIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 10,
   },
   listHeader: {
     flexDirection: 'row',

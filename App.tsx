@@ -8,6 +8,7 @@ import { UserProvider } from './src/context/UserContext.js';
 import PublisherManagementScreen from './src/screens/PublisherManagementScreen/publisher.js';
 import CartScreen from './src/screens/CartScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
+import Adminpower from './src/screens/PhanquyenScreen/danhsachnguoidung.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
+          <Stack.Screen name="Adminpower" component={Adminpower} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
