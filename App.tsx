@@ -8,12 +8,9 @@ import { UserProvider } from './src/context/UserContext.js';
 import PublisherManagementScreen from './src/screens/PublisherManagementScreen/publisher.js';
 import AuthorManagementScreen from './src/screens/AuthorManagementScreen/author.js';
 import CartScreen from './src/screens/CartScreen/index.js';
-<<<<<<< HEAD
 import PaymentScreen from './src/screens/PaymentScreen/index.js';
-=======
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
 import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
->>>>>>> 78e37cb0cd7bca4609b9521b86828780c3641c3f
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -28,13 +25,10 @@ export default function App() {
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
-<<<<<<< HEAD
           <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
-=======
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
           <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
->>>>>>> 78e37cb0cd7bca4609b9521b86828780c3641c3f
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
