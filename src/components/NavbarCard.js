@@ -286,7 +286,7 @@ const NarbarCard = ({ScreenName, iconShop = false }) => {
                 <Text style={styles.menuItem}>Tác giả</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent}>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>{navigation.navigate("UserManagerScreen");closeMenu();}}>
                 <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenuquantringuoidung.png')}
