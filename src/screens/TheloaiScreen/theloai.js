@@ -358,11 +358,6 @@ const styles = StyleSheet.create({
     width: 110,
     height: 40,
   },
-  searchIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 10,
-  },
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
