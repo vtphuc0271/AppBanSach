@@ -12,6 +12,7 @@ import PaymentScreen from './src/screens/PaymentScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
 import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
 import UserManagerScreen from './src/screens/UserManagerScreen/UserManager.js';
+import Adminpower from './src/screens/PhanquyenScreen/danhsachnguoidung.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
           <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
+          <Stack.Screen name="Adminpower" component={Adminpower} />
           <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
           <Stack.Screen name="UserManagerScreen" component={UserManagerScreen} />
