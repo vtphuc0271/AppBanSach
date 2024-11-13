@@ -275,7 +275,7 @@ const ManagerUser = () => {
 
     return (
         <View style={styles.container}>
-            <NavbarCard ScreenName={'Quản trị người dùng'} iconShop={true} />
+            <NavbarCard ScreenName={'Quản Trị Users'} iconShop={true} />
 
             <View style={styles.khungLon}>
                 <View style={styles.khungSearch}>

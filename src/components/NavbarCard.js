@@ -19,10 +19,6 @@ import { useEffect } from 'react';
 // Thêm các import cần thiết cho Firestore
 import firestore from '@react-native-firebase/firestore';
 
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/PhanQuyen
 const NarbarCard = ({ ScreenName, iconShop = false }) => {
   const navigation = useNavigation();
   const { user } = useContext(UserContext);
@@ -256,7 +252,6 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
             </>
           ) : (
             <>
-<<<<<<< HEAD
               {user && user.maVaiTro === '1' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
@@ -294,21 +289,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                     closeMenu();
                   }}>
                   <View style={{ paddingLeft: 20 }}></View>
-=======
-              <TouchableOpacity
-                style={styles.buttonMenuContent}
-                onPress={() => handleQuanTri()}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenutrangchu.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Menu người dùng</Text>
-              </TouchableOpacity>
->>>>>>> feature/PhanQuyen
 
-<<<<<<< HEAD
                   <Image
                     source={require('../assets/iconmenunhaxuatban.png')}
                     style={styles.icon}
@@ -398,105 +379,6 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Quản lý đơn hàng</Text>
                 </TouchableOpacity>
               ) : null}
-=======
-              <TouchableOpacity
-                style={styles.buttonMenuContent}
-                onPress={() => navigation.navigate('bookscreen')}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenusach.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Sách</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.buttonMenuContent}
-                onPress={() => {
-                  navigation.navigate('PublisherManagementScreen');
-                  closeMenu();
-                }}>
-                <View style={{ paddingLeft: 20 }}></View>
-
-                <Image
-                  source={require('../assets/iconmenunhaxuatban.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Nhà xuất bản</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => navigation.navigate('AdminCatagoryScreen')}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenutheloai.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Thể loại</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenutacgia.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Tác giả</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenuquantringuoidung.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Quản trị người dùng</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => { navigation.navigate('Adminpower'); closeMenu(); }}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenuquantri.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Phân quyền</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenulichsugiaodich.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Lịch sử giao dịch</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenuquantri.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Thống kê doanh thu</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
-                <Image
-                  source={require('../assets/iconmenuquantri.png')}
-                  style={styles.icon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.menuItem}>Quản lý đơn hàng</Text>
-              </TouchableOpacity>
->>>>>>> ce7f8a24331ee55f9885a009ba6db935ed79aa95
             </>
           )}
 

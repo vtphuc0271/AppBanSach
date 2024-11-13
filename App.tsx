@@ -30,11 +30,7 @@ export default function App() {
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
           <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
-<<<<<<< HEAD
           <Stack.Screen name="AdminDecentScreen" component={AdminDecentScreen} />
-=======
-          <Stack.Screen name="Adminpower" component={Adminpower} />
->>>>>>> feature/PhanQuyen
           <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
           <Stack.Screen name="UserManagerScreen" component={UserManagerScreen} />

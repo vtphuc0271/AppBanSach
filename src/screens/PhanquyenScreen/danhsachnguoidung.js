@@ -1,40 +1,24 @@
-<<<<<<< HEAD
 import React, { useEffect,useState,useContext } from 'react';
-=======
-import React, { useEffect, useState, useContext } from 'react';
->>>>>>> feature/PhanQuyen
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
 import { UserContext } from '../../context/UserContext';
 
-<<<<<<< HEAD
 const UserListScreen = ({navigation}) => {
-=======
-const UserListScreen = ({ navigation }) => {
->>>>>>> feature/PhanQuyen
     const [users, setUsers] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [isModalVisible, setModalVisible] = useState(false);
     const [selectedRole, setSelectedRole] = useState('');
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-<<<<<<< HEAD
     const {user} = useContext(UserContext);
     useEffect(() => {
         if (user?.maVaiTro && user.maVaiTro !== '1') {
             // Nếu vai trò khác "1", điều hướng về MainScreen
-=======
-    const { user } = useContext(UserContext);
-
-    useEffect(() => {
-        if (user?.maVaiTro && user.maVaiTro !== '1') {
->>>>>>> feature/PhanQuyen
             navigation.navigate('MainScreen');
         }
     }, [user, navigation]);
 
-<<<<<<< HEAD
     useEffect(() => {
         const unsubscribe = firestore()
             .collection('NguoiDung')
@@ -50,32 +34,6 @@ const UserListScreen = ({ navigation }) => {
     }, []);
 
     // Lọc người dùng dựa trên truy vấn tìm kiếm
-=======
-    // Định nghĩa fetchData bên ngoài useEffect để có thể tái sử dụng
-    const fetchData = () => {
-        const unsubscribe = firestore()
-            .collection('NguoiDung')
-            .onSnapshot(querySnapshot => {
-                const userList = querySnapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(user => user.maVaiTro !== '1');
-                setUsers(userList);
-                setFilteredUsers(userList);
-            }, error => {
-                console.log("Error fetching users: ", error);
-            });
-
-        // Trả về hàm cleanup để hủy đăng ký listener khi component bị hủy
-        return unsubscribe;
-    };
-
-    useEffect(() => {
-        const unsubscribe = fetchData();
-        return () => unsubscribe(); // Cleanup khi component unmount
-    }, []);
-
-
->>>>>>> feature/PhanQuyen
     useEffect(() => {
         const filtered = users.filter(user =>
             user.hoTen.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,27 +65,18 @@ const UserListScreen = ({ navigation }) => {
     const updateRole = async () => {
         if (selectedUserId && selectedRole) {
             try {
-<<<<<<< HEAD
                 // Cập nhật vai trò trong Firestore
-=======
-                // Cập nhật vai trò trên Firebase
->>>>>>> feature/PhanQuyen
                 await firestore()
                     .collection('NguoiDung')
                     .doc(selectedUserId)
                     .update({ maVaiTro: selectedRole });
 
-<<<<<<< HEAD
                 // Cập nhật lại trạng thái trong ứng dụng sau khi thay đổi vai trò
                 const updatedUsers = users.map(user =>
                     user.id === selectedUserId ? { ...user, maVaiTro: selectedRole } : user
                 );
                 setUsers(updatedUsers);
                 setFilteredUsers(updatedUsers);
-=======
-                // Làm mới danh sách người dùng từ Firebase
-                await fetchData();
->>>>>>> feature/PhanQuyen
 
                 // Đóng modal sau khi cập nhật
                 setModalVisible(false);
@@ -189,11 +138,6 @@ const UserListScreen = ({ navigation }) => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Chọn vai trò</Text>
-<<<<<<< HEAD
-
-=======
-                        {/* Các nút chọn vai trò */}
->>>>>>> feature/PhanQuyen
                         <View style={styles.radioButtonContainer}>
                             <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedRole('2')}>
                                 <View style={styles.radioCircle}>
@@ -201,20 +145,12 @@ const UserListScreen = ({ navigation }) => {
                                 </View>
                                 <Text style={styles.radioText}>Khách hàng</Text>
                             </TouchableOpacity>
-<<<<<<< HEAD
-=======
-
->>>>>>> feature/PhanQuyen
                             <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedRole('3')}>
                                 <View style={styles.radioCircle}>
                                     {selectedRole === '3' && <View style={styles.selectedRb} />}
                                 </View>
                                 <Text style={styles.radioText}>Nhân viên</Text>
                             </TouchableOpacity>
-<<<<<<< HEAD
-=======
-
->>>>>>> feature/PhanQuyen
                             <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedRole('4')}>
                                 <View style={styles.radioCircle}>
                                     {selectedRole === '4' && <View style={styles.selectedRb} />}
@@ -234,10 +170,6 @@ const UserListScreen = ({ navigation }) => {
     );
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/PhanQuyen
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -313,13 +245,10 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 8,
     },
-<<<<<<< HEAD
     searchIcon: {
         width: 20,
         height: 20,
     },
-=======
->>>>>>> feature/PhanQuyen
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
