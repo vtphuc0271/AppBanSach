@@ -1,33 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
+import { UserContext } from '../../context/UserContext';
 
-const UserListScreen = () => {
+const UserListScreen = ({ navigation }) => {
     const [users, setUsers] = useState([]);
-    const [filteredUsers, setFilteredUsers] = useState([]); // State cho danh sách người dùng đã lọc
+    const [filteredUsers, setFilteredUsers] = useState([]);
     const [isModalVisible, setModalVisible] = useState(false);
     const [selectedRole, setSelectedRole] = useState('');
     const [selectedUserId, setSelectedUserId] = useState(null);
-    const [searchQuery, setSearchQuery] = useState(''); // Thêm searchQuery
+    const [searchQuery, setSearchQuery] = useState('');
+    const { user } = useContext(UserContext);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const usersCollection = await firestore().collection('NguoiDung').get();
-                const userList = usersCollection.docs
+        if (user?.maVaiTro && user.maVaiTro !== '1') {
+            navigation.navigate('MainScreen');
+        }
+    }, [user, navigation]);
+
+    // Định nghĩa fetchData bên ngoài useEffect để có thể tái sử dụng
+    const fetchData = () => {
+        const unsubscribe = firestore()
+            .collection('NguoiDung')
+            .onSnapshot(querySnapshot => {
+                const userList = querySnapshot.docs
                     .map(doc => ({ id: doc.id, ...doc.data() }))
                     .filter(user => user.maVaiTro !== '1');
                 setUsers(userList);
-                setFilteredUsers(userList); // Khởi tạo filteredUsers
-            } catch (error) {
+                setFilteredUsers(userList);
+            }, error => {
                 console.log("Error fetching users: ", error);
-            }
-        };
+            });
 
-        fetchData();
+        // Trả về hàm cleanup để hủy đăng ký listener khi component bị hủy
+        return unsubscribe;
+    };
+
+    useEffect(() => {
+        const unsubscribe = fetchData();
+        return () => unsubscribe(); // Cleanup khi component unmount
     }, []);
+
 
     useEffect(() => {
         const filtered = users.filter(user =>
@@ -60,16 +74,16 @@ const UserListScreen = () => {
     const updateRole = async () => {
         if (selectedUserId && selectedRole) {
             try {
+                // Cập nhật vai trò trên Firebase
                 await firestore()
                     .collection('NguoiDung')
                     .doc(selectedUserId)
                     .update({ maVaiTro: selectedRole });
 
-                setUsers(prevUsers =>
-                    prevUsers.map(user =>
-                        user.id === selectedUserId ? { ...user, maVaiTro: selectedRole } : user
-                    )
-                );
+                // Làm mới danh sách người dùng từ Firebase
+                await fetchData();
+
+                // Đóng modal sau khi cập nhật
                 setModalVisible(false);
             } catch (error) {
                 console.log("Error updating user role: ", error);
@@ -99,10 +113,7 @@ const UserListScreen = () => {
 
     return (
         <View style={styles.container}>
-            <NavbarCard
-                ScreenName={'người dùng'}
-                iconShop={true}>
-            </NavbarCard>
+            <NavbarCard ScreenName={'người dùng'} iconShop={true} />
             <View style={styles.searchContainer}>
                 <TextInput
                     style={styles.searchInput}
@@ -118,7 +129,7 @@ const UserListScreen = () => {
                 </TouchableOpacity>
             </View>
             <FlatList
-                data={filteredUsers} // Sử dụng danh sách người dùng đã lọc
+                data={filteredUsers}
                 renderItem={renderUserItem}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.userList}
@@ -132,32 +143,23 @@ const UserListScreen = () => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Chọn vai trò</Text>
-
+                        {/* Các nút chọn vai trò */}
                         <View style={styles.radioButtonContainer}>
-                            <TouchableOpacity
-                                style={styles.radioButton}
-                                onPress={() => setSelectedRole('2')}
-                            >
+                            <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedRole('2')}>
                                 <View style={styles.radioCircle}>
                                     {selectedRole === '2' && <View style={styles.selectedRb} />}
                                 </View>
                                 <Text style={styles.radioText}>Khách hàng</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.radioButton}
-                                onPress={() => setSelectedRole('3')}
-                            >
+                            <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedRole('3')}>
                                 <View style={styles.radioCircle}>
                                     {selectedRole === '3' && <View style={styles.selectedRb} />}
                                 </View>
                                 <Text style={styles.radioText}>Nhân viên</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.radioButton}
-                                onPress={() => setSelectedRole('4')}
-                            >
+                            <TouchableOpacity style={styles.radioButton} onPress={() => setSelectedRole('4')}>
                                 <View style={styles.radioCircle}>
                                     {selectedRole === '4' && <View style={styles.selectedRb} />}
                                 </View>
@@ -172,7 +174,6 @@ const UserListScreen = () => {
                     </View>
                 </View>
             </Modal>
-
         </View>
     );
 };
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         width: '100%',
         marginTop: 20,
-    },radioButtonContainer: {
+    }, radioButtonContainer: {
         flexDirection: 'column',
         alignItems: 'flex-start',
         width: '100%',
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     radioText: {
         fontSize: 16,
         color: 'black',
-    },    
+    },
 });
 
 export default UserListScreen;
