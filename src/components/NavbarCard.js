@@ -280,6 +280,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   }}>
                   <View style={{ paddingLeft: 20 }}></View>
 
+<<<<<<< HEAD
                   <Image
                     source={require('../assets/iconmenunhaxuatban.png')}
                     style={styles.icon}
@@ -369,6 +370,111 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Quản lý đơn hàng</Text>
                 </TouchableOpacity>
               ) : null}
+=======
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                  onPress={() => {navigation.navigate('BookManagementScreen')
+                  closeMenu();
+                }}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenusach.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Sách</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                onPress={() => {
+                  navigation.navigate('PublisherManagementScreen');
+                  closeMenu();
+                }}>
+                <View style={{paddingLeft: 20}}></View>
+
+                <Image
+                  source={require('../assets/iconmenunhaxuatban.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Nhà xuất bản</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent} 
+                onPress={() => {
+                  navigation.navigate('AdminCatagoryScreen');
+                  closeMenu();
+                }}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenutheloai.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Thể loại</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>{navigation.navigate("AuthorManagementScreen");closeMenu();}}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenutacgia.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Tác giả</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={()=>{navigation.navigate("UserManagerScreen");closeMenu();}}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenuquantringuoidung.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Quản trị người dùng</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenuquantri.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Phân quyền</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenulichsugiaodich.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Lịch sử giao dịch</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenuquantri.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Thống kê doanh thu</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.buttonMenuContent}>
+                <View style={{paddingLeft: 20}}></View>
+                <Image
+                  source={require('../assets/iconmenuquantri.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Quản lý đơn hàng</Text>
+              </TouchableOpacity>
+>>>>>>> ce7f8a24331ee55f9885a009ba6db935ed79aa95
             </>
           )}
 
