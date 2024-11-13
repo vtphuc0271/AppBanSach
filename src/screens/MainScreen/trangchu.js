@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import { UserContext } from '../../context/UserContext';
+import {UserContext} from '../../context/UserContext';
+import {useNavigation} from '@react-navigation/native';
 
 const TrangChuScreen = () => {
+  const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
   const [expandedItem, setExpandedItem] = useState(null);
   const [sortItem, setsortItem] = useState(null);
@@ -25,8 +27,8 @@ const TrangChuScreen = () => {
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const { user } = useContext(UserContext);
-  console.log('day la user: ', user);
+  const {user} = useContext(UserContext);
+  //console.log('day la user: ', user);
   const [data, setData] = useState([]);
 
   const toggleFilter = () => {
@@ -42,16 +44,16 @@ const TrangChuScreen = () => {
       setFilterItem(!filterItem);
     }
   };
-  
+
   const filteredBooks = data.filter(book =>
-    book.tenSach?.toLowerCase().includes(searchText?.toLowerCase() || "")
+    book.tenSach?.toLowerCase().includes(searchText?.toLowerCase() || ''),
   );
 
   const sortData = () => {
     const sortedData = [...data];
-  
+
     if (!sortOption) return;
-  
+
     switch (sortOption) {
       case 'priceAsc':
         sortedData.sort((a, b) => a.giaTien - b.giaTien);
@@ -76,85 +78,92 @@ const TrangChuScreen = () => {
     }
     setData(sortedData);
   };
-  
-  const handleSortOption = (option) => {
-    if (sortOption === option) return; 
-    setSortOption(option);  
-    sortData();  
+
+  const handleSortOption = option => {
+    if (sortOption === option) return;
+    setSortOption(option);
+    sortData();
   };
-  
 
   useEffect(() => {
     sortData();
   }, [sortOption]);
 
-  const getAuthorNameById = (authorId) => {
+  const getAuthorNameById = authorId => {
     const author = tacGia.find(a => a.id === authorId);
     return author ? author.name : 'Unknown Author';
   };
 
-  const getTheLoaiNameById = (theLoaiId) => {
+  const getTheLoaiNameById = theLoaiId => {
     const tl = theLoai.find(t => t.id === theLoaiId);
     return tl ? tl.name : 'Unknown theLoai';
   };
 
-  const getNXBNameById = (nxbId) => {
+  const getNXBNameById = nxbId => {
     const nxb = nhaXuatBan.find(n => n.id === nxbId);
     return nxb ? nxb.name : 'Unknown Author';
   };
 
   useEffect(() => {
-    const unsubscribeAuthors = firestore().collection('TacGia').onSnapshot(
-      snapshot => {
-        const authorList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name,
-        }));
-        setAuthors(authorList);
-      },
-      error => {
-        console.error('Error fetching authors: ', error);
-      }
-    );
+    const unsubscribeAuthors = firestore()
+      .collection('TacGia')
+      .onSnapshot(
+        snapshot => {
+          const authorList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name,
+          }));
+          setAuthors(authorList);
+        },
+        error => {
+          console.error('Error fetching authors: ', error);
+        },
+      );
 
-    const unsubscribeGenres = firestore().collection('TheLoai').onSnapshot(
-      snapshot => {
-        const genreList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().tenTheLoai,
-        }));
-        setGenres(genreList);
-      },
-      error => {
-        console.error('Error fetching genres: ', error);
-      }
-    );
+    const unsubscribeGenres = firestore()
+      .collection('TheLoai')
+      .onSnapshot(
+        snapshot => {
+          const genreList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().tenTheLoai,
+          }));
+          setGenres(genreList);
+        },
+        error => {
+          console.error('Error fetching genres: ', error);
+        },
+      );
 
-    const unsubscribePublishers = firestore().collection('NhaXuatBan').onSnapshot(
-      snapshot => {
-        const publisherList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name,
-        }));
-        setPublishers(publisherList);
-      },
-      error => {
-        console.error('Error fetching publishers: ', error);
-      }
-    );
+    const unsubscribePublishers = firestore()
+      .collection('NhaXuatBan')
+      .onSnapshot(
+        snapshot => {
+          const publisherList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name,
+          }));
+          setPublishers(publisherList);
+        },
+        error => {
+          console.error('Error fetching publishers: ', error);
+        },
+      );
 
-    const unsubscribeBooks = firestore().collection('Sach').onSnapshot(
-      snapshot => {
-        const bookList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setData(bookList);
-      },
-      error => {
-        console.error('Error fetching books: ', error);
-      }
-    );
+    const unsubscribeBooks = firestore()
+      .collection('Sach')
+      .onSnapshot(
+        snapshot => {
+          const bookList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setData(bookList);
+        },
+        error => {
+          console.error('Error fetching books: ', error);
+        },
+      );
 
     // Cleanup function to unsubscribe when component unmounts
     return () => {
@@ -163,7 +172,46 @@ const TrangChuScreen = () => {
       unsubscribePublishers();
       unsubscribeBooks();
     };
-  }, []); 
+  }, []);
+
+  const addToCart = async (id_Sach, soLuong = 1) => {
+    if (!user?.uid) {
+      console.error('User chưa đăng nhập');
+      return;
+    }
+
+    try {
+      const cartItemRef = firestore()
+        .collection('GioHang')
+        .doc(`${user.uid}_${id_Sach}`); // Dùng id_NguoiDung và id_Sach làm Document ID
+
+      const cartItemSnapshot = await cartItemRef.get();
+
+      if (cartItemSnapshot.exists) {
+        // Nếu sản phẩm đã tồn tại, tăng số lượng lên
+        const currentSoLuong = parseInt(cartItemSnapshot.data().soLuong) || 0;
+        await cartItemRef.update({
+          soLuong: (currentSoLuong + soLuong).toString(),
+        });
+      } else {
+        // Nếu sản phẩm chưa tồn tại, tạo mới với soLuong = 1
+        await cartItemRef.set({
+          id_NguoiDung: user.uid,
+          id_Sach,
+          soLuong: soLuong.toString(),
+        });
+      }
+
+      console.log('Thêm vào giỏ hàng thành công');
+    } catch (error) {
+      console.error('Lỗi khi thêm vào giỏ hàng: ', error);
+    }
+  };
+
+  // Hàm điều hướng khi người dùng nhấn "Mua ngay"
+  const handleBuyNow = id_Sach => {
+    navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
+  };
 
   const displayLimitedData = (data, limit) => {
     return data.slice(0, limit);
@@ -191,51 +239,62 @@ const TrangChuScreen = () => {
     return stars;
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View
       style={[
         styles.itemContainer,
-        { backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6' },
+        {backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6'},
       ]}>
       <TouchableOpacity onPress={() => toggleExpand(item.id)}>
         <View style={styles.row}>
           <View style={[styles.imageContainer]}>
             {item.anhSach ? (
-              <Image source={{ uri: item.anhSach }} style={styles.categoryImage} />
+              <Image
+                source={{uri: item.anhSach}}
+                style={styles.categoryImage}
+              />
             ) : (
-              <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
+              <Image
+                source={require('../../assets/default.png')}
+                style={styles.categoryImage}
+              />
             )}
           </View>
           <View style={styles.infoContainer}>
-            <View style={{ marginLeft: 15, padding: 0 }}>
-              <Text style={[styles.title, { maxWidth: 250, flexWrap: 'wrap' }]}>
+            <View style={{marginLeft: 15, padding: 0}}>
+              <Text style={[styles.title, {maxWidth: 250, flexWrap: 'wrap'}]}>
                 {item.tenSach}
               </Text>
-              <Text style={[styles.text, { maxWidth: 250, flexWrap: 'wrap' }]}>
+              <Text style={[styles.text, {maxWidth: 250, flexWrap: 'wrap'}]}>
                 {getAuthorNameById(item.tacGia)}
               </Text>
               <View style={styles.ratingContainer}>
-                <View style={styles.starContainer}>
-                  {renderStars(4)}
-                </View>
+                <View style={styles.starContainer}>{renderStars(4)}</View>
                 <Text style={styles.votes}>({244} lượt đánh giá)</Text>
               </View>
               <Text style={styles.giaTien}>
                 {item.giaTien
-                  ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.giaTien)
+                  ? new Intl.NumberFormat('vi-VN', {
+                      style: 'currency',
+                      currency: 'VND',
+                    }).format(item.giaTien)
                   : '0 VNĐ'}
               </Text>
             </View>
             {expandedItem !== item.id && (
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.buttonAddToCart}>
+                <TouchableOpacity
+                  style={styles.buttonAddToCart}
+                  onPress={() => addToCart(item.id)}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
                   <Image
                     source={require('../../assets/themvaogio.png')}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.buttonBuyNow}>
+                <TouchableOpacity
+                  style={styles.buttonBuyNow}
+                  onPress={() => handleBuyNow(item.id)}>
                   <Text style={styles.buttonText}>Mua ngay</Text>
                   <Image
                     source={require('../../assets/muangay.png')}
@@ -251,7 +310,9 @@ const TrangChuScreen = () => {
       {expandedItem === item.id && (
         <>
           <View style={styles.divider} />
-          <TouchableOpacity style={styles.detailsContainer} onPress={() => toggleExpand(item.id)}>
+          <TouchableOpacity
+            style={styles.detailsContainer}
+            onPress={() => toggleExpand(item.id)}>
             <Text>Thể loại: {getTheLoaiNameById(item.theLoai)}</Text>
             <View style={styles.row}>
               <View style={styles.column}>
@@ -301,12 +362,16 @@ const TrangChuScreen = () => {
       <TouchableOpacity
         style={[
           styles.sortOption,
-          sortOption === option ? { backgroundColor: '#4CAF50' } : { backgroundColor: '#fff' }, // Bôi đen tùy chọn đã chọn
+          sortOption === option
+            ? {backgroundColor: '#4CAF50'}
+            : {backgroundColor: '#fff'}, // Bôi đen tùy chọn đã chọn
         ]}
         onPress={() => handleSortOption(option)}
         disabled={sortOption === option} // Disable lựa chọn đã chọn
       >
-        <Text style={{ color: sortOption === option ? '#fff' : '#000' }}>{label}</Text>
+        <Text style={{color: sortOption === option ? '#fff' : '#000'}}>
+          {label}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -328,7 +393,7 @@ const TrangChuScreen = () => {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.searchButton} onPress={toggleFilter}>
+        <TouchableOpacity style={styles.searchButton}>
           <Image
             source={require('../../assets/BoLoc.png')}
             style={styles.searchIcon}
@@ -348,7 +413,7 @@ const TrangChuScreen = () => {
       {filterItem && (
         <ScrollView
           style={styles.filterContainer}
-          contentContainerStyle={{ paddingBottom: 50 }}>
+          contentContainerStyle={{paddingBottom: 50}}>
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
@@ -371,14 +436,13 @@ const TrangChuScreen = () => {
           {/* Tác Giả */}
           <Text style={styles.sectionTitle}>Tác Giả</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(
-              tacGia,
-              showAllAuthors ? tacGia.length : 6,
-            ).map((tacGia, index) => (
-              <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{tacGia.name}</Text>
-              </TouchableOpacity>
-            ))}
+            {displayLimitedData(tacGia, showAllAuthors ? tacGia.length : 6).map(
+              (tacGia, index) => (
+                <TouchableOpacity key={index} style={styles.tag}>
+                  <Text>{tacGia.name}</Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
 
           <TouchableOpacity onPress={() => setShowAllAuthors(!showAllAuthors)}>
@@ -508,7 +572,7 @@ const styles = StyleSheet.create({
     width: 105,
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.5,
     shadowRadius: 15,
     elevation: 8,
@@ -611,7 +675,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
   },
-  
+
   icon: {
     marginLeft: 8,
     width: 20,
