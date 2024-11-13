@@ -122,7 +122,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
             <Image
               source={require('../assets/shopicon.png')}
               style={styles.icon}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </TouchableOpacity>
         </View>
