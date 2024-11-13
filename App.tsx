@@ -6,8 +6,12 @@ import LoginScreen from './src/screens/LoginScreen/login';
 import RegisterScreen from './src/screens/RegisterScreen/register';
 import { UserProvider } from './src/context/UserContext.js';
 import PublisherManagementScreen from './src/screens/PublisherManagementScreen/publisher.js';
+import AuthorManagementScreen from './src/screens/AuthorManagementScreen/author.js';
 import CartScreen from './src/screens/CartScreen/index.js';
+import PaymentScreen from './src/screens/PaymentScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
+import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
+import UserManagerScreen from './src/screens/UserManagerScreen/UserManager.js';
 import Adminpower from './src/screens/PhanquyenScreen/danhsachnguoidung.js';
 const Stack = createStackNavigator();
 
@@ -23,8 +27,12 @@ export default function App() {
           <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="PublisherManagementScreen" component={PublisherManagementScreen} />
+          <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
           <Stack.Screen name="AdminCatagoryScreen" component={AdminCatagoryScreen} />
           <Stack.Screen name="Adminpower" component={Adminpower} />
+          <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
+          <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
+          <Stack.Screen name="UserManagerScreen" component={UserManagerScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

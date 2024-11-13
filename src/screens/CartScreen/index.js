@@ -36,13 +36,11 @@ const CartScreen = () => {
   };
 
   const handleIncreaseQuantity = async (userId, itemId) => {
-    setIsLoading(true);
     await updateCartQuantity(userId, itemId, 'increase');
     fetchCartItemsWithDetails();
   };
 
   const handleDecreaseQuantity = async (userId, itemId) => {
-    setIsLoading(true);
     await updateCartQuantity(userId, itemId, 'decrease');
     fetchCartItemsWithDetails();
   };
@@ -163,7 +161,8 @@ const CartScreen = () => {
             </View>
             <TouchableOpacity
               style={styles.checkoutButton}
-              disabled={isLoading}>
+              disabled={isLoading}
+              onPress={() => navigation.navigate('PaymentScreen')}>
               <Text style={styles.checkoutText}>Thanh Toán</Text>
             </TouchableOpacity>
           </View>

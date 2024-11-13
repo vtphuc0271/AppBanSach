@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,52 +11,23 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
-const data = [
-  {
-    id: '1',
-    title: 'Clean code',
-    author: 'Robert C. Martin',
-    price: '324.000 VNĐ',
-    rating: 4,
-    votes: 211,
-    details: {
-      part: 1,
-      edition: 1,
-      printFormat: 'Bìa mềm',
-      category: 'Computers - Programming',
-      pages: 462,
-      dimensions: '16x24 cm',
-      published: 2009,
-      language: 'English',
-      publisher: 'Tri Thức Trẻ Books & NXB Dân Trí',
-    },
-    image: require('../../assets/cleancode.png'),
-  },
-  {
-    id: '2',
-    title: 'Hạt giống tâm hồn',
-    author: 'Nhiều tác giả',
-    price: '230.000 VNĐ',
-    rating: 5,
-    votes: 211,
-    image: require('../../assets/hatgiongtanhon.png'),
-  },
-];
+import { UserContext } from '../../context/UserContext';
 
 const TrangChuScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [expandedItem, setExpandedItem] = useState(null);
   const [sortItem, setsortItem] = useState(null);
   const [filterItem, setFilterItem] = useState(null);
-  const [authorsList, setAuthorsList] = useState([]);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllAuthors, setShowAllAuthors] = useState(false);
   const [showAllPublishers, setShowAllPublishers] = useState(false);
-
-  const {user} = useContext(UserContext);
-  console.log("day la user: ",user);
-
+  const [sortOption, setSortOption] = useState(null);
+  const [tacGia, setAuthors] = useState([]);
+  const [theLoai, setGenres] = useState([]);
+  const [nhaXuatBan, setPublishers] = useState([]);
+  const { user } = useContext(UserContext);
+  console.log('day la user: ', user);
+  const [data, setData] = useState([]);
 
   const toggleFilter = () => {
     setFilterItem(!filterItem);
@@ -67,70 +38,141 @@ const TrangChuScreen = () => {
 
   const toggleSort = () => {
     setsortItem(!sortItem);
-    if (filterItem == true) {
+    if (filterItem) {
       setFilterItem(!filterItem);
     }
   };
+  
+  const filteredBooks = data.filter(book =>
+    book.tenSach?.toLowerCase().includes(searchText?.toLowerCase() || "")
+  );
 
-  const categories = [
-    'Trinh thám',
-    'Tình yêu',
-    'Hoạt hình',
-    'Kinh dị',
-    'Kĩ năng',
-    'Kiến thức',
-    'Lịch sử',
-    'Giáo khoa',
-    'Nấu ăn',
-  ];
+  const sortData = () => {
+    const sortedData = [...data];
+  
+    if (!sortOption) return;
+  
+    switch (sortOption) {
+      case 'priceAsc':
+        sortedData.sort((a, b) => a.giaTien - b.giaTien);
+        break;
+      case 'priceDesc':
+        sortedData.sort((a, b) => b.giaTien - a.giaTien);
+        break;
+      case 'titleAsc':
+        sortedData.sort((a, b) => a.tenSach.localeCompare(b.tenSach));
+        break;
+      case 'ratingHigh':
+        sortedData.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'ratingLow':
+        sortedData.sort((a, b) => a.rating - b.rating);
+        break;
+      case 'popular':
+        sortedData.sort((a, b) => b.votes - a.votes);
+        break;
+      default:
+        break;
+    }
+    setData(sortedData);
+  };
+  
+  const handleSortOption = (option) => {
+    if (sortOption === option) return; 
+    setSortOption(option);  
+    sortData();  
+  };
+  
 
-  const publishers = [
-    'Kim Đồng',
-    'Giáo dục Việt Nam',
-    'Trẻ',
-    'Tư pháp',
-    'Lao động',
-    ,
-    'Chính trị quốc gia sự thật',
-    'Hội Nhà văn',
-    'Tổng hợp thành phố Hồ Chí Minh',
-  ];
-
-  //Lấy dữ liệu từ firebase(firestore)
   useEffect(() => {
-    const authors = firestore().collection('TacGia');
-    const unsubscribe = authors.onSnapshot(
-      querySnapshot => {
-        if (querySnapshot && !querySnapshot.empty) {
-          const list = [];
-          querySnapshot.forEach(doc => {
-            list.push({
-              id_tacGia: doc.id,
-              tenTacGia: doc.data().tenTacGia,
-            });
-          });
-          setAuthorsList(list);
-        } else {
-          console.log('No documents found in the collection');
-        }
+    sortData();
+  }, [sortOption]);
+
+  const getAuthorNameById = (authorId) => {
+    const author = tacGia.find(a => a.id === authorId);
+    return author ? author.name : 'Unknown Author';
+  };
+
+  const getTheLoaiNameById = (theLoaiId) => {
+    const tl = theLoai.find(t => t.id === theLoaiId);
+    return tl ? tl.name : 'Unknown theLoai';
+  };
+
+  const getNXBNameById = (nxbId) => {
+    const nxb = nhaXuatBan.find(n => n.id === nxbId);
+    return nxb ? nxb.name : 'Unknown Author';
+  };
+
+  useEffect(() => {
+    const unsubscribeAuthors = firestore().collection('TacGia').onSnapshot(
+      snapshot => {
+        const authorList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+        }));
+        setAuthors(authorList);
       },
       error => {
-        console.error('Error fetching data: ', error);
-      },
+        console.error('Error fetching authors: ', error);
+      }
     );
-    return () => unsubscribe();
-  }, []);
 
-  // Hàm hiển thị giới hạn dữ liệu
+    const unsubscribeGenres = firestore().collection('TheLoai').onSnapshot(
+      snapshot => {
+        const genreList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().tenTheLoai,
+        }));
+        setGenres(genreList);
+      },
+      error => {
+        console.error('Error fetching genres: ', error);
+      }
+    );
+
+    const unsubscribePublishers = firestore().collection('NhaXuatBan').onSnapshot(
+      snapshot => {
+        const publisherList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+        }));
+        setPublishers(publisherList);
+      },
+      error => {
+        console.error('Error fetching publishers: ', error);
+      }
+    );
+
+    const unsubscribeBooks = firestore().collection('Sach').onSnapshot(
+      snapshot => {
+        const bookList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setData(bookList);
+      },
+      error => {
+        console.error('Error fetching books: ', error);
+      }
+    );
+
+    // Cleanup function to unsubscribe when component unmounts
+    return () => {
+      unsubscribeAuthors();
+      unsubscribeGenres();
+      unsubscribePublishers();
+      unsubscribeBooks();
+    };
+  }, []); 
+
   const displayLimitedData = (data, limit) => {
     return data.slice(0, limit);
   };
 
   const toggleExpand = itemId => {
-    setExpandedItem(expandedItem === itemId ? null : itemId);
+    setExpandedItem(prevState => (prevState === itemId ? null : itemId));
   };
 
-  // Hàm render ngôi sao cho rating
   const renderStars = rating => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -149,26 +191,42 @@ const TrangChuScreen = () => {
     return stars;
   };
 
-  const renderItem = ({item}) => (
+  const renderItem = ({ item }) => (
     <View
       style={[
         styles.itemContainer,
-        {backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6'},
+        { backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6' },
       ]}>
       <TouchableOpacity onPress={() => toggleExpand(item.id)}>
         <View style={styles.row}>
-          <Image source={item.image} style={styles.image} />
+          <View style={[styles.imageContainer]}>
+            {item.anhSach ? (
+              <Image source={{ uri: item.anhSach }} style={styles.categoryImage} />
+            ) : (
+              <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
+            )}
+          </View>
           <View style={styles.infoContainer}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text>{item.author}</Text>
-            <View style={styles.ratingContainer}>
-              <View style={styles.starContainer}>
-                {renderStars(item.rating)}
+            <View style={{ marginLeft: 15, padding: 0 }}>
+              <Text style={[styles.title, { maxWidth: 250, flexWrap: 'wrap' }]}>
+                {item.tenSach}
+              </Text>
+              <Text style={[styles.text, { maxWidth: 250, flexWrap: 'wrap' }]}>
+                {getAuthorNameById(item.tacGia)}
+              </Text>
+              <View style={styles.ratingContainer}>
+                <View style={styles.starContainer}>
+                  {renderStars(4)}
+                </View>
+                <Text style={styles.votes}>({244} lượt đánh giá)</Text>
               </View>
-              <Text style={styles.votes}>({item.votes} lượt đánh giá)</Text>
+              <Text style={styles.giaTien}>
+                {item.giaTien
+                  ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.giaTien)
+                  : '0 VNĐ'}
+              </Text>
             </View>
-            <Text style={styles.price}>{item.price}</Text>
-            {expandedItem === null && (
+            {expandedItem !== item.id && (
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.buttonAddToCart}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
@@ -193,30 +251,19 @@ const TrangChuScreen = () => {
       {expandedItem === item.id && (
         <>
           <View style={styles.divider} />
-          <TouchableOpacity
-            style={styles.detailsContainer}
-            onPress={() => toggleExpand(item.id)}>
-            {item.details ? (
-              <>
-                <Text>Thể loại: {item.details.category}</Text>
-                <View style={styles.row}>
-                  <View style={styles.column}>
-                    <Text>Phần: {item.details.part}</Text>
-                    <Text>Năm xuất bản: {item.details.published}</Text>
-                    <Text>In lần thứ: {item.details.edition}</Text>
-                    <Text>Tổng số trang: {item.details.pages}</Text>
-                  </View>
-                  <View style={styles.column}>
-                    <Text>Khổ sách: {item.details.dimensions}</Text>
-                    <Text>Hình thức in: {item.details.printFormat}</Text>
-                    <Text>Ngôn ngữ: {item.details.language}</Text>
-                  </View>
-                </View>
-                <Text>Đơn vị liên kết: {item.details.publisher}</Text>
-              </>
-            ) : (
-              <Text>Không có thông tin chi tiết</Text>
-            )}
+          <TouchableOpacity style={styles.detailsContainer} onPress={() => toggleExpand(item.id)}>
+            <Text>Thể loại: {getTheLoaiNameById(item.theLoai)}</Text>
+            <View style={styles.row}>
+              <View style={styles.column}>
+                <Text>Phần: {'item.part'}</Text>
+                <Text>In lần thứ: {'item.edition'}</Text>
+              </View>
+              <View style={styles.column}>
+                <Text>Năm xuất bản: {item.namXuatBan}</Text>
+                <Text>Ngôn ngữ: {'item.language'}</Text>
+              </View>
+            </View>
+            <Text>Đơn vị liên kết: {getNXBNameById(item.nhaXuatBan)}</Text>
           </TouchableOpacity>
           <View style={styles.divider} />
         </>
@@ -249,6 +296,21 @@ const TrangChuScreen = () => {
     </View>
   );
 
+  const renderSortOption = (option, label) => {
+    return (
+      <TouchableOpacity
+        style={[
+          styles.sortOption,
+          sortOption === option ? { backgroundColor: '#4CAF50' } : { backgroundColor: '#fff' }, // Bôi đen tùy chọn đã chọn
+        ]}
+        onPress={() => handleSortOption(option)}
+        disabled={sortOption === option} // Disable lựa chọn đã chọn
+      >
+        <Text style={{ color: sortOption === option ? '#fff' : '#000' }}>{label}</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <NavbarCard ScreenName={'Trang chủ'} />
@@ -275,39 +337,27 @@ const TrangChuScreen = () => {
       </View>
       {sortItem && (
         <View style={styles.sortOptionsContainer}>
-          <TouchableOpacity style={styles.sortOption}>
-            <Text>Theo giá tăng dần</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
-            <Text>Theo giá giảm dần</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
-            <Text>Sắp xếp A-Z</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
-            <Text>Đánh giá cao</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
-            <Text>Đánh giá thấp</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sortOption}>
-            <Text>Thịnh hành</Text>
-          </TouchableOpacity>
+          {renderSortOption('priceAsc', 'Theo giá tăng dần')}
+          {renderSortOption('priceDesc', 'Theo giá giảm dần')}
+          {renderSortOption('titleAsc', 'Sắp xếp A-Z')}
+          {renderSortOption('ratingHigh', 'Đánh giá cao')}
+          {renderSortOption('ratingLow', 'Đánh giá thấp')}
+          {renderSortOption('popular', 'Thịnh hành')}
         </View>
       )}
       {filterItem && (
         <ScrollView
           style={styles.filterContainer}
-          contentContainerStyle={{paddingBottom: 50}}>
+          contentContainerStyle={{ paddingBottom: 50 }}>
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
             {displayLimitedData(
-              categories,
-              showAllCategories ? categories.length : 6,
-            ).map((category, index) => (
+              theLoai,
+              showAllCategories ? theLoai.length : 6,
+            ).map((theLoai, index) => (
               <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{category}</Text>
+                <Text>{theLoai}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -322,11 +372,11 @@ const TrangChuScreen = () => {
           <Text style={styles.sectionTitle}>Tác Giả</Text>
           <View style={styles.tagContainer}>
             {displayLimitedData(
-              authorsList,
-              showAllAuthors ? authorsList.length : 6,
-            ).map((author, index) => (
+              tacGia,
+              showAllAuthors ? tacGia.length : 6,
+            ).map((tacGia, index) => (
               <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{author.tenTacGia}</Text>
+                <Text>{tacGia.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -341,11 +391,11 @@ const TrangChuScreen = () => {
           <Text style={styles.sectionTitle}>Nhà Xuất Bản</Text>
           <View style={styles.tagContainer}>
             {displayLimitedData(
-              publishers,
-              showAllPublishers ? publishers.length : 6,
-            ).map((publisher, index) => (
+              nhaXuatBan,
+              showAllPublishers ? nhaXuatBan.length : 6,
+            ).map((nhaXuatBan, index) => (
               <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{publisher}</Text>
+                <Text>{nhaXuatBan}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -358,7 +408,7 @@ const TrangChuScreen = () => {
         </ScrollView>
       )}
       <FlatList
-        data={data}
+        data={filteredBooks}
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
@@ -453,10 +503,23 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
-  image: {
-    width: 120,
-    height: 120,
+  imageContainer: {
+    height: 128,
+    width: 105,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  categoryImage: {
     borderRadius: 5,
+    marginTop: 8,
+    marginRight: 3,
+    width: 100,
+    height: 120,
+    resizeMode: 'stretch',
   },
   infoContainer: {
     marginLeft: 10,
@@ -548,6 +611,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
   },
+  
   icon: {
     marginLeft: 8,
     width: 20,

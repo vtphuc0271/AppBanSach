@@ -54,10 +54,10 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
 
   const closeMenu = () => {
     Animated.timing(slideAnim, {
-      toValue: -Dimensions.get('window').width * 0.75, // Trượt ra ngoài màn hình
+      toValue: -Dimensions.get('window').width * 0.75,
       duration: 300,
       useNativeDriver: false,
-    }).start(() => setMenuVisible(false)); // Đóng menu khi hoàn tất animation
+    }).start(() => setMenuVisible(false));
   };
 
   const handleAuthPress = () => {
@@ -86,7 +86,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
         />
       </TouchableOpacity>
 
-      <Text style={[styles.screenName, { marginLeft: iconShop == true ? 0 : 40 }]}>{ScreenName}</Text>
+      <Text style={[styles.screenName,{marginRight: iconShop == true ? 40 : -40}]}>{ScreenName}</Text>
 
       {iconShop == false ? (<>
         <View style={styles.iconContainer}>
@@ -246,7 +246,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               <TouchableOpacity
                 style={styles.buttonMenuContent}
                 onPress={() => navigation.navigate('bookscreen')}>
-                <View style={{ paddingLeft: 20 }}></View>
+                <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenusach.png')}
                   style={styles.icon}
@@ -271,8 +271,8 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 <Text style={styles.menuItem}>Nhà xuất bản</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => { navigation.navigate('AdminCatagoryScreen'); closeMenu(); }}>
-                <View style={{ paddingLeft: 20 }}></View>
+              <TouchableOpacity style={styles.buttonMenuContent} onPress={() => navigation.navigate('AdminCatagoryScreen')}>
+                <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenutheloai.png')}
                   style={styles.icon}
@@ -282,7 +282,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
+                <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenutacgia.png')}
                   style={styles.icon}
@@ -292,7 +292,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.buttonMenuContent}>
-                <View style={{ paddingLeft: 20 }}></View>
+                <View style={{paddingLeft: 20}}></View>
                 <Image
                   source={require('../assets/iconmenuquantringuoidung.png')}
                   style={styles.icon}
