@@ -17,6 +17,7 @@ const ManagerUser = () => {
     const [mk, setMK] = useState('');
     const [email, setEmail] = useState('');
     const [sdt, setSDT] = useState('');
+    const [vaitro, setVaiTro] = useState();
     const [expandedUserId, setExpandedUserId] = useState(null);
     const [showNotification, setShowNotification] = useState(false);
     const [notificationType, setNotificationType] = useState('');
@@ -25,6 +26,7 @@ const ManagerUser = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editUserId, setEditUserId] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
+
     const [newSpaceUser, setNewSpaceUser] = useState({
         hinh: '',
         hoTen: '',
@@ -89,6 +91,7 @@ const ManagerUser = () => {
                     ...doc.data(),
                 }));
                 setNguoiDung(nguoiDungList);
+                setImage(nguoiDung.hinh);
             },
             error => {
                 console.error('Error fetching Firestore data: ', error);
@@ -96,6 +99,12 @@ const ManagerUser = () => {
         );
     }, []);
 
+    //Cap nhat anh 
+    // inUser1((nguoi) => {
+    //     if (nguoi.hinh) {
+    //         setImage(nguoi.hinh); // Cập nhật trạng thái hình ảnh khi nguoi.hinh có giá trị
+    //     }
+    // }, [nguoi.hinh]); // Khi nguoi.hinh thay đổi thì gọi setImage
 
     // Hàm tạo người dùng với kiểm tra đầu vào
     const registerUser = () => {
@@ -118,26 +127,25 @@ const ManagerUser = () => {
             return;
         }
 
-
-        // Kiểm tra xem có ảnh chưa và tải lên Firebase nếu có
-        // Nếu có ảnh, tải lên Firebase và lấy URL
-        // let imageUrl = image; // Nếu không có ảnh, sẽ sử dụng ảnh mặc định
-        // if (selectedImage) {
-        //     // Giả sử bạn đã có hàm uploadImage để tải lên Firebase Storage
-        //     imageUrl = uploadImage(selectedImage); // Hàm upload ảnh lên Firebase
-        // }
-
-        // Sau khi các kiểm tra đầu vào đều hợp lệ, thực hiện đăng ký
+        //Tao nguoi dung
+        {
         firebase
             .auth()
             .createUserWithEmailAndPassword(email, mk)
             .then(async userCredential => {
                 const user = userCredential.user;
 
+                let imageUrl = image; // URL ảnh hiện tại
+                if (selectedImage) {
+                    imageUrl = await uploadImage(selectedImage);
+                } else {
+                    imageUrl = '';
+                }
+
                 // Lưu thông tin người dùng vào Firestore
                 await firestore().collection('NguoiDung').doc(user.uid).set({
                     email,
-                    hinh:'',
+                    hinh: imageUrl,
                     hoTen: ten,
                     maVaiTro: '2',
                     soDienThoai: sdt,
@@ -180,19 +188,69 @@ const ManagerUser = () => {
                 //Đảm bảo rằng modal chỉ đóng khi quá trình đăng ký thành công
                 //setIsModalVisible(false); // Đừng gọi ở đây!
             });
+        }
+
     };
+
 
 
     //Sua nguoi dung
     const handleEditUser = (nguoi) => {
         toggleEdit();
         setIsEditing(true); // Đặt chế độ chỉnh sửa
-        setImage(nguoi.image);
+        setImage(nguoi.hinh);
+        // setVaiTro(nguoi.vaitro)
         setTen(nguoi.hoTen); // Truyền dữ liệu vào trường "Tên"
         setEmail(nguoi.email); // Truyền dữ liệu vào trường "Email"
         setSDT(nguoi.soDienThoai); // Truyền dữ liệu vào trường "Số điện thoại"
         setEditUserId(nguoi.id); // Lưu ID người dùng để thực hiện sửa
         console.log('ten: ', nguoi.hoTen);
+        console.log('hinh: ', nguoi.hinh);
+        console.log('sdt: ', nguoi.soDienThoai);
+    };
+
+
+    //Chan nguoi dung
+    const handleBlock = async (nguoi) => {
+        const userId = nguoi.id;
+
+        // Kiểm tra xem người dùng có tồn tại không
+        if (!userId) {
+            Alert.alert('Thông báo', 'Không tìm thấy ID người dùng.');
+            return;
+        }
+
+        try {
+            // Cập nhật vai trò người dùng thành "6" (bị chặn) trực tiếp
+            await firestore()
+                .collection('NguoiDung')
+                .doc(userId)
+                .update({
+                    maVaiTro: 6,
+                });
+
+            // Thông báo chặn thành công
+            Alert.alert('Thông báo', 'Chặn người dùng thành công!');
+
+            // Làm mới danh sách người dùng sau khi chặn (nếu cần)
+            const unsubscribeNguoiDung = firestore().collection('NguoiDung').onSnapshot(
+                snapshot => {
+                    const nguoiDungList = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
+                    setNguoiDung(nguoiDungList);
+                },
+                error => {
+                    console.error('Error fetching Firestore data: ', error);
+                }
+            );
+
+        } catch (error) {
+            // Nếu có lỗi trong quá trình cập nhật
+            Alert.alert('Thông báo', 'Chặn người dùng thất bại. Vui lòng thử lại.');
+            console.error('Lỗi khi chặn người dùng:', error);
+        }
     };
 
 
@@ -216,19 +274,22 @@ const ManagerUser = () => {
             Alert.alert('Thông báo', 'Vui lòng điền đầy đủ thông tin.');
             return;
         }
-    
+
         try {
             let imageUrl = image; // URL ảnh hiện tại
             if (selectedImage) {
                 imageUrl = await uploadImage(selectedImage);
+            } else {
+                imageUrl = '';
             }
-    
+
             // Kiểm tra từng biến trước khi cập nhật
             console.log('ten:', ten);
             console.log('email:', email);
             console.log('sdt:', sdt);
+            console.log('vai tro:', vaitro);
             console.log('imageUrl:', imageUrl);
-    
+
             await firestore()
                 .collection('NguoiDung')
                 .doc(editUserId)
@@ -239,17 +300,18 @@ const ManagerUser = () => {
                     soDienThoai: sdt,
                     maVaiTro: '2',
                 });
-    
+
             Alert.alert('Thông báo', 'Cập nhật người dùng thành công!');
             resetForm();
             setIsModalVisible(false);
+            setIsEditing(false);
         } catch (error) {
             Alert.alert('Thông báo', 'Cập nhật người dùng thất bại. Vui lòng thử lại.');
             console.error('Error updating user:', error);
         }
     };
-    
-    
+
+
 
     //Ham check
     const hamlog = () => {
@@ -269,9 +331,9 @@ const ManagerUser = () => {
 
 
     //Lay thong tin tai ten
-    const filteredUser = nguoiDung.filter(nguoi =>
-        nguoi.hoTen?.toLowerCase().includes(searchText?.toLowerCase() || "")
-    );
+    const filteredUser = nguoiDung
+        .filter(nguoi => nguoi.hoTen?.toLowerCase().includes(searchText?.toLowerCase() || ""));
+    //.filter((nguoi) => nguoi.maVaiTro !== 6); hello bro
 
     return (
         <View style={styles.container}>
@@ -290,12 +352,12 @@ const ManagerUser = () => {
                 </View>
 
                 <ScrollView>
-                    {filteredUser.map((nguoi) => (
-                        <TouchableOpacity key={nguoi.id} style={styles.khungItem} onPress={() => toggleExpand(nguoi.id)}>
+                    {filteredUser.map((nguoi) => ( 
+                        <TouchableOpacity key={nguoi.id} style={styles.khungItem} onPress={() => {toggleExpand(nguoi.id)}}>
                             <View style={{ flexDirection: "row" }}>
-                                <TouchableOpacity></TouchableOpacity>
                                 {nguoi.hinh ? (
                                     <Image source={{ uri: nguoi.hinh }} style={styles.anh} />
+                                    
                                 ) : (
                                     <Image source={require('../../assets/default.png')} style={styles.anh} />
                                 )}
@@ -314,7 +376,7 @@ const ManagerUser = () => {
                                                 <Image style={styles.icon1} source={require('../../assets/SuaTT.png')} />
                                                 <Text style={styles.buttonText}>Sửa thông tin</Text>
                                             </TouchableOpacity>
-                                            <TouchableOpacity style={styles.buttonRed}>
+                                            <TouchableOpacity style={styles.buttonRed} onPress={() => handleBlock(nguoi)}>
                                                 <Image style={styles.icon1} source={require('../../assets/ChanTK.png')} />
                                                 <Text style={styles.buttonText}>Chặn tài khoản</Text>
                                             </TouchableOpacity>
