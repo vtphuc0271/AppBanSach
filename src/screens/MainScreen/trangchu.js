@@ -31,6 +31,39 @@ const TrangChuScreen = () => {
   //console.log('day la user: ', user);
   const [data, setData] = useState([]);
 
+  //Tạo Trạng Thái Cho Bộ Lọc
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [selectedPublisher, setSelectedPublisher] = useState(null);
+
+  //Cập Nhật Hàm Xử Lý Cho Các Nút Bộ Lọc
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category === selectedCategory ? null : category);
+  };
+
+  const handleAuthorSelect = (authorName) => {
+    setSelectedAuthor(authorName === selectedAuthor ? null : authorName);
+  };
+
+  const handlePublisherSelect = (publisher) => {
+    setSelectedPublisher(publisher === selectedPublisher ? null : publisher);
+  };
+
+  //Hàm Lọc Dữ Liệu filterBooks
+  const filterBooks = () => {
+    return data.filter((item) => {
+      const categoryMatch = selectedCategory ? item.category === selectedCategory : true;
+      const authorMatch = selectedAuthor ? item.author === selectedAuthor : true;
+      const publisherMatch = selectedPublisher ? item.publisher === selectedPublisher : true;
+      const searchMatch = searchText
+        ? item.title.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.author.toLowerCase().includes(searchText.toLowerCase())
+        : true;
+      return categoryMatch && authorMatch && publisherMatch && searchMatch;
+    });
+  };
+  
+
   const toggleFilter = () => {
     setFilterItem(!filterItem);
     if (sortItem == true) {
@@ -410,24 +443,32 @@ const TrangChuScreen = () => {
           {renderSortOption('popular', 'Thịnh hành')}
         </View>
       )}
+
       {filterItem && (
         <ScrollView
           style={styles.filterContainer}
-          contentContainerStyle={{paddingBottom: 50}}>
+          contentContainerStyle={{ paddingBottom: 50 }}
+        >
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
             {displayLimitedData(
-              theLoai,
-              showAllCategories ? theLoai.length : 6,
-            ).map((theLoai, index) => (
-              <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{theLoai}</Text>
+              categories,
+              showAllCategories ? categories.length : 6
+            ).map((category, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tag,
+                  { backgroundColor: selectedCategory === category ? '#98EE8A' : '#fff' },
+                ]}
+                onPress={() => handleCategorySelect(category)}
+              >
+                <Text>{category}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <TouchableOpacity
-            onPress={() => setShowAllCategories(!showAllCategories)}>
+          <TouchableOpacity onPress={() => setShowAllCategories(!showAllCategories)}>
             <Text style={styles.showMoreText}>
               {showAllCategories ? 'ẩn...' : 'Tất cả...'}
             </Text>
@@ -436,15 +477,22 @@ const TrangChuScreen = () => {
           {/* Tác Giả */}
           <Text style={styles.sectionTitle}>Tác Giả</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(tacGia, showAllAuthors ? tacGia.length : 6).map(
-              (tacGia, index) => (
-                <TouchableOpacity key={index} style={styles.tag}>
-                  <Text>{tacGia.name}</Text>
-                </TouchableOpacity>
-              ),
-            )}
+            {displayLimitedData(
+              authorsList,
+              showAllAuthors ? authorsList.length : 6
+            ).map((author, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tag,
+                  { backgroundColor: selectedAuthor === author.tenTacGia ? '#98EE8A' : '#fff' },
+                ]}
+                onPress={() => handleAuthorSelect(author.tenTacGia)}
+              >
+                <Text>{author.tenTacGia}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-
           <TouchableOpacity onPress={() => setShowAllAuthors(!showAllAuthors)}>
             <Text style={styles.showMoreText}>
               {showAllAuthors ? 'Ẩn...' : 'Tất cả...'}
@@ -455,22 +503,29 @@ const TrangChuScreen = () => {
           <Text style={styles.sectionTitle}>Nhà Xuất Bản</Text>
           <View style={styles.tagContainer}>
             {displayLimitedData(
-              nhaXuatBan,
-              showAllPublishers ? nhaXuatBan.length : 6,
-            ).map((nhaXuatBan, index) => (
-              <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{nhaXuatBan}</Text>
+              publishers,
+              showAllPublishers ? publishers.length : 6
+            ).map((publisher, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tag,
+                  { backgroundColor: selectedPublisher === publisher ? '#98EE8A' : '#fff' },
+                ]}
+                onPress={() => handlePublisherSelect(publisher)}
+              >
+                <Text>{publisher}</Text>
               </TouchableOpacity>
             ))}
           </View>
-          <TouchableOpacity
-            onPress={() => setShowAllPublishers(!showAllPublishers)}>
+          <TouchableOpacity onPress={() => setShowAllPublishers(!showAllPublishers)}>
             <Text style={styles.showMoreText}>
               {showAllPublishers ? 'ẩn...' : 'Tất cả...'}
             </Text>
           </TouchableOpacity>
         </ScrollView>
       )}
+      
       <FlatList
         data={filteredBooks}
         renderItem={renderItem}
