@@ -95,7 +95,11 @@ const NarbarCard = ({ScreenName, iconShop = false}) => {
       setNotificationType('success');
       setNotificationMessage('Bạn đã đăng xuất thành công!');
       setShowNotification(true);
-      navigation.navigate('LoginScreen');
+      setTimeout(() => {
+        navigation.navigate('MainScreen');
+        closeMenu();
+        setShowNotification(false);
+      }, 1000);
     } else {
       navigation.navigate('LoginScreen');
       closeMenu();
@@ -153,8 +157,7 @@ const NarbarCard = ({ScreenName, iconShop = false}) => {
           {/*menu người dùng*/}
           {quanTri === false ? (
             <>
-              {(user && user.maVaiTro === '2') ||
-              (user && user.maVaiTro === '1') ? (
+             
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -169,7 +172,7 @@ const NarbarCard = ({ScreenName, iconShop = false}) => {
                   />
                   <Text style={styles.menuItem}>Trang chủ</Text>
                 </TouchableOpacity>
-              ) : null}
+
               {(user && user.maVaiTro === '2') ||
               (user && user.maVaiTro === '1') ? (
                 <TouchableOpacity

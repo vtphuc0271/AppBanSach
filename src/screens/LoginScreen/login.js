@@ -12,6 +12,7 @@ import '@react-native-firebase/auth';
 import '@react-native-firebase/firestore';
 import NotificationCard from '../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
+import NavbarCard from '../../components/NavbarCard';
 
 export default function App() {
   const navigation = useNavigation();
@@ -153,7 +154,10 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container2}>
+      <NavbarCard iconShop={true}></NavbarCard>
+      <View style={styles.container}>
+      
       <Text style={styles.header}>Đăng Nhập</Text>
 
       <TextInput
@@ -211,6 +215,8 @@ export default function App() {
         </TouchableOpacity>
       )}
     </View>
+    </View>
+    
   );
 }
 
@@ -218,8 +224,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E0F8D8',
-    justifyContent: 'center',
+    paddingTop: 120,
     paddingHorizontal: 20,
+  },
+  container2: {
+    flex: 1,
+    backgroundColor: '#E0F8D8',
   },
   register: {
     flexDirection: 'row',
@@ -233,6 +243,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
     color: '#4CAF50',
+    
   },
   input: {
     backgroundColor: '#FFF',
