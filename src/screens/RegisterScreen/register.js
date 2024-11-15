@@ -48,13 +48,13 @@ export default function App() {
         // Lưu thông tin người dùng vào Firestore
         await firebase.firestore().collection('NguoiDung').doc(user.uid).set({
           email,
-          hinh: '',
+          hinh: 'https://firebasestorage.googleapis.com/v0/b/bansachnhom2.appspot.com/o/images%2Frn_image_picker_lib_temp_51914ec3-f61a-4530-ac71-323e773c26f0.jpg?alt=media&token=9616e23f-daa7-48e8-950a-4a010f77f7ab',
           hoTen,
           maVaiTro: '2',
           soDienThoai,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
-
+s
         setNotificationType('success');
         setNotificationMessage(
           'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.',
