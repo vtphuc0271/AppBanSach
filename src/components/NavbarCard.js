@@ -126,7 +126,7 @@ const NarbarCard = ({ScreenName, iconShop = false}) => {
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={()=> navigation.navigate('CartScreen')}>
               <Image
                 source={require('../assets/shopicon.png')}
                 style={styles.icon}

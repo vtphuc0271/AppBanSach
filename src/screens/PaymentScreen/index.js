@@ -174,8 +174,18 @@ const PaymentScreen = ({route}) => {
       console.error('Lỗi khi hủy đơn hàng:', error);
     }
   };
-
+  const [hoTen, setHoTen] = useState(user.hoTen || '');
+  const [diaChi, setDiaChi] = useState(user.diaChi || '');
+  const [soDienThoai, setSoDienThoai] = useState(user.soDienThoai || '');
   const toggleModal = async () => {
+    if (!hoTen.trim() || !diaChi.trim() || !soDienThoai.trim()) {
+      setNotificationType('error');
+      setNotificationMessage(
+        'Vui lòng nhập đầy đủ thông tin',
+      );
+      setShowNotification(true);
+      return;
+    }
     if (paymentMethod === 'QR') {
       if (!isModalVisible && !orderId) {
         await createEmptyOrder();
@@ -223,7 +233,9 @@ const PaymentScreen = ({route}) => {
           'Bạn đã đặt hàng thành công! (Vui lòng chờ xác nhận thanh toán và theo dõi tình trạng đơn hàng)',
         );
         setShowNotification(true);
-
+        setTimeout(() => {
+          navigation.navigate('MainScreen');
+        }, 3000);
         console.log('Thanh toán thành công và giỏ hàng đã được xóa.');
       } else {
         const tongTien = getTotalPrice();
@@ -279,7 +291,9 @@ const PaymentScreen = ({route}) => {
           'Bạn đã đặt hàng thành công! (Vui lòng chờ xác nhận thanh toán và theo dõi tình trạng đơn hàng)',
         );
         setShowNotification(true);
-
+        setTimeout(() => {
+          navigation.navigate('MainScreen');
+        }, 3000);
         console.log('Thanh toán thành công và giỏ hàng đã được xóa.');
       }
     } catch (error) {
@@ -300,19 +314,31 @@ const PaymentScreen = ({route}) => {
       <View style={styles.container}>
         {/* Thông tin người dùng */}
         <View style={styles.infoSection}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Họ tên:</Text>
-            <TextInput style={styles.input}>{user.hoTen}</TextInput>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <TextInput style={styles.input}>{user.diaChi}</TextInput>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>SĐT:</Text>
-            <TextInput style={styles.input}>{user.soDienThoai}</TextInput>
-          </View>
-        </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>Họ tên:</Text>
+        <TextInput
+          style={styles.input}
+          value={hoTen}
+          onChangeText={(text) => setHoTen(text)}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>Địa chỉ:</Text>
+        <TextInput
+          style={styles.input}
+          value={diaChi}
+          onChangeText={(text) => setDiaChi(text)}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>SĐT:</Text>
+        <TextInput
+          style={styles.input}
+          value={soDienThoai}
+          onChangeText={(text) => setSoDienThoai(text)}
+        />
+      </View>
+    </View>
 
         {/* Giỏ hàng */}
         <View style={styles.cartSection}>
@@ -397,7 +423,6 @@ const PaymentScreen = ({route}) => {
         <TouchableOpacity
           onPress={() => {
             setShowNotification(false);
-            navigation.navigate('MainScreen');
           }}
           style={[
             {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
