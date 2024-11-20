@@ -12,6 +12,7 @@ import '@react-native-firebase/auth';
 import '@react-native-firebase/firestore';
 import NotificationCard from '../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
+import NavbarCard from '../../components/NavbarCard';
 
 export default function App() {
   const navigation = useNavigation();
@@ -24,11 +25,47 @@ export default function App() {
 
   const loginUser = (email, password) => {
     setLoading(true);
+    
     firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
-      .then(userCredential => {
+      .then(async (userCredential) => {
         console.log('User logged in: ', userCredential.user);
+  
+        // Kiểm tra mã vai trò của người dùng
+        const user = userCredential.user;
+        const userRef = firebase.firestore().collection('NguoiDung').doc(user.uid); // Giả sử bạn lưu thông tin người dùng ở Firestore
+  
+        try {
+          const userDoc = await userRef.get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            
+            // Kiểm tra mã vai trò
+            if (userData.maVaiTro === 6) {
+              setNotificationType('error');
+              setNotificationMessage('Tài khoản bị chặn. Vui lòng sử dụng tài khoản khác.');
+              setShowNotification(true);
+              setLoading(false); // Dừng loading
+              return; // Dừng tiến trình đăng nhập nếu tài khoản bị chặn
+            }
+          } else {
+            setNotificationType('error');
+            setNotificationMessage('Không tìm thấy thông tin người dùng.');
+            setShowNotification(true);
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.log('Error checking user role: ', error);
+          setNotificationType('error');
+          setNotificationMessage('Lỗi khi kiểm tra thông tin người dùng.');
+          setShowNotification(true);
+          setLoading(false);
+          return;
+        }
+  
+        // Nếu không bị chặn, tiếp tục đăng nhập thành công
         setNotificationType('success');
         setNotificationMessage('Bạn đã đăng nhập thành công!');
         setShowNotification(true);
@@ -38,7 +75,7 @@ export default function App() {
       })
       .catch(error => {
         console.log('Error code: ', error.code);
-
+  
         if (error.code === 'auth/invalid-credential') {
           setNotificationMessage(
             'Thông tin xác thực không hợp lệ hoặc đã hết hạn.',
@@ -54,8 +91,7 @@ export default function App() {
             'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!',
           );
         }
-        
-
+  
         setNotificationType('error');
         setShowNotification(true);
       })
@@ -63,6 +99,7 @@ export default function App() {
         setLoading(false);
       });
   };
+  
 
   const handleHideNotification = () => {
     setShowNotification(false);
@@ -117,7 +154,10 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container2}>
+      <NavbarCard iconShop={true}></NavbarCard>
+      <View style={styles.container}>
+      
       <Text style={styles.header}>Đăng Nhập</Text>
 
       <TextInput
@@ -175,6 +215,8 @@ export default function App() {
         </TouchableOpacity>
       )}
     </View>
+    </View>
+    
   );
 }
 
@@ -182,8 +224,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E0F8D8',
-    justifyContent: 'center',
+    paddingTop: 120,
     paddingHorizontal: 20,
+  },
+  container2: {
+    flex: 1,
+    backgroundColor: '#E0F8D8',
   },
   register: {
     flexDirection: 'row',
@@ -197,6 +243,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
     color: '#4CAF50',
+    
   },
   input: {
     backgroundColor: '#FFF',

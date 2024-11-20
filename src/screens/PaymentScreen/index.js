@@ -19,7 +19,7 @@ import firestore from '@react-native-firebase/firestore';
 import NotificationCard from '../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
 
-const PaymentScreen = () => {
+const PaymentScreen = ({route}) => {
   const {user} = useContext(UserContext);
   const [cartItems, setCartItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -28,6 +28,7 @@ const PaymentScreen = () => {
   const [orderId, setOrderId] = useState(null);
 
   const navigation = useNavigation();
+  const {id_Sach} = route.params || {};
 
   const [showNotification, setShowNotification] = useState(false);
   const [notificationType, setNotificationType] = useState('');
@@ -39,6 +40,25 @@ const PaymentScreen = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const accountName = 'HO%20QUANG%20TRUONG';
   const qrUrl = `https://img.vietqr.io/image/${bankCode}-${accountNumber}-${template}.jpg?amount=${totalPrice}&addInfo=${orderId}&accountName=${accountName}`;
+
+  const fetchBookDetails = async id_Sach => {
+    try {
+      const bookDetails = await getBookById(id_Sach); // Hàm truy vấn chi tiết sách theo id
+      if (bookDetails) {
+        setCartItems([
+          {
+            id_Sach: id_Sach,
+            tenSach: bookDetails.tenSach,
+            soLuong: '1',
+            giaTien: Number(bookDetails.giaTien) || 0,
+          },
+        ]);
+        setTotalPrice(Number(bookDetails.giaTien) || 0);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết sách:', error);
+    }
+  };
 
   const fetchCartItemsWithDetails = async () => {
     try {
@@ -67,12 +87,18 @@ const PaymentScreen = () => {
 
   useEffect(() => {
     if (user && user.uid) {
-      fetchCartItemsWithDetails();
+      if (id_Sach) {
+        fetchBookDetails(id_Sach);
+      } else {
+        fetchCartItemsWithDetails();
+      }
     }
-  }, [user]);
+  }, [user, id_Sach]);
 
   useEffect(() => {
-    setTotalPrice(getTotalPrice());
+    if (!id_Sach) {
+      setTotalPrice(getTotalPrice());
+    }
   }, [cartItems]);
 
   useEffect(() => {
@@ -87,7 +113,6 @@ const PaymentScreen = () => {
       'change',
       handleAppStateChange,
     );
-
 
     return () => {
       subscription.remove();
@@ -149,8 +174,18 @@ const PaymentScreen = () => {
       console.error('Lỗi khi hủy đơn hàng:', error);
     }
   };
-
+  const [hoTen, setHoTen] = useState(user.hoTen || '');
+  const [diaChi, setDiaChi] = useState(user.diaChi || '');
+  const [soDienThoai, setSoDienThoai] = useState(user.soDienThoai || '');
   const toggleModal = async () => {
+    if (!hoTen.trim() || !diaChi.trim() || !soDienThoai.trim()) {
+      setNotificationType('error');
+      setNotificationMessage(
+        'Vui lòng nhập đầy đủ thông tin',
+      );
+      setShowNotification(true);
+      return;
+    }
     if (paymentMethod === 'QR') {
       if (!isModalVisible && !orderId) {
         await createEmptyOrder();
@@ -170,15 +205,17 @@ const PaymentScreen = () => {
         await finalizeOrder();
 
         // Xóa tất cả sản phẩm trong giỏ hàng của người dùng
-        await firestore()
-          .collection('GioHang')
-          .where('id_NguoiDung', '==', user.uid)
-          .get()
-          .then(querySnapshot => {
-            querySnapshot.forEach(doc => {
-              doc.ref.delete(); // Xóa từng sản phẩm trong giỏ hàng
+        if (!id_Sach) {
+          await firestore()
+            .collection('GioHang')
+            .where('id_NguoiDung', '==', user.uid)
+            .get()
+            .then(querySnapshot => {
+              querySnapshot.forEach(doc => {
+                doc.ref.delete(); // Xóa từng sản phẩm trong giỏ hàng
+              });
             });
-          });
+        }
 
         // Tạo bảng ThanhToan với các thông tin cần thiết
         const thanhToanRef = await firestore().collection('ThanhToan').add({
@@ -196,7 +233,9 @@ const PaymentScreen = () => {
           'Bạn đã đặt hàng thành công! (Vui lòng chờ xác nhận thanh toán và theo dõi tình trạng đơn hàng)',
         );
         setShowNotification(true);
-
+        setTimeout(() => {
+          navigation.navigate('MainScreen');
+        }, 3000);
         console.log('Thanh toán thành công và giỏ hàng đã được xóa.');
       } else {
         const tongTien = getTotalPrice();
@@ -233,15 +272,17 @@ const PaymentScreen = () => {
         });
 
         // Xóa tất cả sản phẩm trong giỏ hàng của người dùng
-        await firestore()
-          .collection('GioHang')
-          .where('id_NguoiDung', '==', user.uid)
-          .get()
-          .then(querySnapshot => {
-            querySnapshot.forEach(doc => {
-              doc.ref.delete(); // Xóa từng sản phẩm trong giỏ hàng
+        if (!id_Sach) {
+          await firestore()
+            .collection('GioHang')
+            .where('id_NguoiDung', '==', user.uid)
+            .get()
+            .then(querySnapshot => {
+              querySnapshot.forEach(doc => {
+                doc.ref.delete(); // Xóa từng sản phẩm trong giỏ hàng
+              });
             });
-          });
+        }
 
         // Đóng modal và hiển thị thông báo thành công
         setModalVisible(false);
@@ -250,7 +291,9 @@ const PaymentScreen = () => {
           'Bạn đã đặt hàng thành công! (Vui lòng chờ xác nhận thanh toán và theo dõi tình trạng đơn hàng)',
         );
         setShowNotification(true);
-
+        setTimeout(() => {
+          navigation.navigate('MainScreen');
+        }, 3000);
         console.log('Thanh toán thành công và giỏ hàng đã được xóa.');
       }
     } catch (error) {
@@ -271,19 +314,31 @@ const PaymentScreen = () => {
       <View style={styles.container}>
         {/* Thông tin người dùng */}
         <View style={styles.infoSection}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Họ tên:</Text>
-            <TextInput style={styles.input}>{user.hoTen}</TextInput>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <TextInput style={styles.input}>{user.diaChi}</TextInput>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>SĐT:</Text>
-            <TextInput style={styles.input}>{user.soDienThoai}</TextInput>
-          </View>
-        </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>Họ tên:</Text>
+        <TextInput
+          style={styles.input}
+          value={hoTen}
+          onChangeText={(text) => setHoTen(text)}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>Địa chỉ:</Text>
+        <TextInput
+          style={styles.input}
+          value={diaChi}
+          onChangeText={(text) => setDiaChi(text)}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.label}>SĐT:</Text>
+        <TextInput
+          style={styles.input}
+          value={soDienThoai}
+          onChangeText={(text) => setSoDienThoai(text)}
+        />
+      </View>
+    </View>
 
         {/* Giỏ hàng */}
         <View style={styles.cartSection}>
@@ -368,7 +423,6 @@ const PaymentScreen = () => {
         <TouchableOpacity
           onPress={() => {
             setShowNotification(false);
-            navigation.navigate('MainScreen');
           }}
           style={[
             {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},

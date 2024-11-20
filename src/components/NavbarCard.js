@@ -41,10 +41,11 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
   const [slideAnim] = useState(
     new Animated.Value(-Dimensions.get('window').width * 0.75),
   ); // Khởi tạo giá trị trượt từ bên ngoài màn hình
-   // Reset menu về mặc định khi quay lại MainScreen
-   useEffect(() => {
+  // Reset menu về mặc định khi quay lại MainScreen
+  useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      const currentRoute = navigation.getState().routes[navigation.getState().index].name;
+      const currentRoute =
+        navigation.getState().routes[navigation.getState().index].name;
       if (currentRoute === 'MainScreen') {
         setQuanTri(false);
       }
@@ -75,7 +76,10 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
 
   React.useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      if (navigation.getState().routes[navigation.getState().index].name === 'MainScreen') {
+      if (
+        navigation.getState().routes[navigation.getState().index].name ===
+        'MainScreen'
+      ) {
         setQuanTri(false);
         closeMenu();
       }
@@ -90,7 +94,11 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
       setNotificationType('success');
       setNotificationMessage('Bạn đã đăng xuất thành công!');
       setShowNotification(true);
-      navigation.navigate('LoginScreen');
+      setTimeout(() => {
+        navigation.navigate('MainScreen');
+        closeMenu();
+        setShowNotification(false);
+      }, 1000);
     } else {
       navigation.navigate('LoginScreen');
       closeMenu();
@@ -106,26 +114,31 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
         />
       </TouchableOpacity>
 
-      <Text style={[styles.screenName, { marginRight: iconShop == true ? 40 : -40 }]}>{ScreenName}</Text>
+      <Text
+        style={[styles.screenName, { marginRight: iconShop == true ? 40 : -40 }]}>
+        {ScreenName}
+      </Text>
 
-      {iconShop == false ? (<>
-        <View style={styles.iconContainer}>
-          <TouchableOpacity>
-            <Image
-              source={require('../assets/notificationicon.png')}
-              style={styles.icon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Image
-              source={require('../assets/shopicon.png')}
-              style={styles.icon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-      </>) : null}
+      {iconShop == false ? (
+        <>
+          <View style={styles.iconContainer}>
+            <TouchableOpacity>
+              <Image
+                source={require('../assets/notificationicon.png')}
+                style={styles.icon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
+              <Image
+                source={require('../assets/shopicon.png')}
+                style={styles.icon}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : null}
 
       {/* Modal Menu */}
       <Modal visible={isMenuVisible} transparent={true}>
@@ -143,23 +156,24 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
           {/*menu người dùng*/}
           {quanTri === false ? (
             <>
-              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1' || user && user.maVaiTro === '3' || user && user.maVaiTro === '4' ? (
-                <TouchableOpacity
-                  style={styles.buttonMenuContent}
-                  onPress={() => {
-                    navigation.navigate('MainScreen');
-                    closeMenu();
-                  }}>
-                  <View style={{ paddingLeft: 20 }}></View>
-                  <Image
-                    source={require('../assets/iconmenutrangchu.png')}
-                    style={styles.icon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.menuItem}>Trang chủ</Text>
-                </TouchableOpacity>
-              ) : null}
-              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1'|| user && user.maVaiTro === '3' || user && user.maVaiTro === '4' ? (
+
+              <TouchableOpacity
+                style={styles.buttonMenuContent}
+                onPress={() => {
+                  navigation.navigate('MainScreen');
+                  closeMenu();
+                }}>
+                <View style={{ paddingLeft: 20 }}></View>
+                <Image
+                  source={require('../assets/iconmenutrangchu.png')}
+                  style={styles.icon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.menuItem}>Trang chủ</Text>
+              </TouchableOpacity>
+
+              {(user && user.maVaiTro === '2') ||
+                (user && user.maVaiTro === '1') ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -175,7 +189,8 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Giỏ hàng</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '2') ||
+                (user && user.maVaiTro === '1') ? (
                 <TouchableOpacity style={styles.buttonMenuContent}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
@@ -187,7 +202,10 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
 
-              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1' || user && user.maVaiTro === '3' || user && user.maVaiTro === '4' ? (
+              {(user && user.maVaiTro === '2') ||
+                (user && user.maVaiTro === '1') ||
+                (user && user.maVaiTro === '3') ||
+                (user && user.maVaiTro === '4') ? (
                 <TouchableOpacity style={styles.buttonMenuContent}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
@@ -199,9 +217,9 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
 
-
               {/* menu shipper/nhân viên */}
-              {user && user.maVaiTro === '4' || user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '4') ||
+                (user && user.maVaiTro === '1') ? (
                 <TouchableOpacity style={styles.buttonMenuContent}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
@@ -212,7 +230,8 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Đơn hàng của tôi</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '3' || user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '3') ||
+                (user && user.maVaiTro === '1') ? (
                 <TouchableOpacity style={styles.buttonMenuContent}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
@@ -223,7 +242,8 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Quản lý kho hàng</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '4' || user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '4') ||
+                (user && user.maVaiTro === '1') ? (
                 <TouchableOpacity style={styles.buttonMenuContent}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
@@ -268,7 +288,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
-                    navigation.navigate('BookManagementScreen')
+                    navigation.navigate('BookManagementScreen');
                     closeMenu();
                   }}>
                   <View style={{ paddingLeft: 20 }}></View>
@@ -298,7 +318,8 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
               {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}
+                <TouchableOpacity
+                  style={styles.buttonMenuContent}
                   onPress={() => {
                     navigation.navigate('AdminCatagoryScreen');
                     closeMenu();
@@ -313,7 +334,12 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
               {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent} onPress={() => { navigation.navigate("AuthorManagementScreen"); closeMenu(); }}>
+                <TouchableOpacity
+                  style={styles.buttonMenuContent}
+                  onPress={() => {
+                    navigation.navigate('AuthorManagementScreen');
+                    closeMenu();
+                  }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenutacgia.png')}
@@ -324,7 +350,10 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
               {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}onPress={() => { navigation.navigate("UserManagerScreen"); closeMenu(); }}>
+                <TouchableOpacity style={styles.buttonMenuContent} onPress={() => {
+                  navigation.navigate('UserManagerScreen');
+                  closeMenu();
+                }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantringuoidung.png')}
@@ -335,7 +364,12 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
               {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent} onPress={() => { navigation.navigate("AdminDecentScreen"); closeMenu(); }}>
+                <TouchableOpacity
+                  style={styles.buttonMenuContent}
+                  onPress={() => {
+                    navigation.navigate('AdminDecentScreen');
+                    closeMenu();
+                  }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantri.png')}

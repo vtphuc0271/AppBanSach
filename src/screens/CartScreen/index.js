@@ -55,20 +55,22 @@ const CartScreen = () => {
     try {
       const cartItems = await getUserCart(user.uid);
       const authorsList = await getAllAuthors();
+      //console.log("authorsList",authorsList);
       setAuthors(authorsList);
 
       const itemsWithDetails = await Promise.all(
         cartItems.map(async cartItem => {
           const bookDetails = await getBookById(cartItem.id_Sach);
+          //console.log("bookDetails",bookDetails);
           if (bookDetails) {
             const author = authorsList.find(
-              a => a.id === bookDetails.id_TacGia,
+              a => a.id === bookDetails.tacGia,
             );
             const giaTien = Number(bookDetails.giaTien) || 0;
             return {
               ...cartItem,
               ...bookDetails,
-              tacGia: author ? author.tenTacGia : 'Tác giả không xác định',
+              tacGia: author ? author.name : 'Tác giả không xác định',
               giaTien: giaTien,
             };
           }

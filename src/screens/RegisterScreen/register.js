@@ -54,7 +54,7 @@ export default function App() {
           soDienThoai,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
-
+s
         setNotificationType('success');
         setNotificationMessage(
           'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.',
