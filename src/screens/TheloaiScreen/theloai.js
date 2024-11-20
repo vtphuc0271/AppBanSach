@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Modal, Image } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-const CategoryList = () => {
+import { UserContext } from '../../context/UserContext';
+import { Alert } from 'react-native';
+
+const CategoryList = ({navigation}) => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -11,6 +14,24 @@ const CategoryList = () => {
   const [editingCategory, setEditingCategory] = useState({ id: '', name: '' });
   const [searchText, setSearchText] = useState('');
   const [confirmDeleteAllVisible, setConfirmDeleteAllVisible] = useState(false);
+  const {user} = useContext(UserContext);
+
+  useEffect(() => {
+    if (user?.maVaiTro && user.maVaiTro !== '1') {
+        // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+        Alert.alert(
+            "Quyền hạn thay đổi",
+            "Bạn không có quyền truy cập vào màn hình này.",
+            [
+                {
+                    text: "OK",
+                    onPress: () => navigation.navigate('LoginScreen')
+                }
+            ],
+            { cancelable: false }
+        );
+    }
+}, [user, navigation]);
 
   // Fetch data from Firestore on component mount
   useEffect(() => {

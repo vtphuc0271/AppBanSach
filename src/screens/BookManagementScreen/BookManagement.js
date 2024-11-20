@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
@@ -6,8 +6,9 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import NavbarCard from '../../components/NavbarCard';
+import { UserContext } from '../../context/UserContext';
 
-const BookManagement = () => {
+const BookManagement = ({navigation}) => {
   const [Sach, setBooks] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,6 +32,23 @@ const BookManagement = () => {
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
+  const {user} = useContext(UserContext);
+  useEffect(() => {
+    if (user?.maVaiTro && user.maVaiTro !== '1') {
+      // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+      Alert.alert(
+        "Quyền hạn thay đổi",
+        "Bạn không có quyền truy cập vào màn hình này.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate('LoginScreen')
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [user, navigation]);
   useEffect(() => {
     // Lấy dữ liệu sách
     const unsubscribeBooks = firestore().collection('Sach').onSnapshot(

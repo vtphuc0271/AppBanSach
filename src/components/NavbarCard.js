@@ -49,7 +49,6 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
         setQuanTri(false);
       }
     });
-
     return unsubscribe;
   }, [navigation]);
 
@@ -144,7 +143,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
           {/*menu người dùng*/}
           {quanTri === false ? (
             <>
-              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1' ? (
+              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1' || user && user.maVaiTro === '3' || user && user.maVaiTro === '4' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -160,7 +159,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Trang chủ</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1' ? (
+              {user && user.maVaiTro === '2' || user && user.maVaiTro === '1'|| user && user.maVaiTro === '3' || user && user.maVaiTro === '4' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -325,7 +324,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
               {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent}onPress={() => { navigation.navigate("UserManagerScreen"); closeMenu(); }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantringuoidung.png')}

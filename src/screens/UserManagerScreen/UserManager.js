@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal, LayoutAnimation, Platform, UIManager } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import firestore from '@react-native-firebase/firestore';
@@ -7,9 +7,9 @@ import firebase from '@react-native-firebase/app';
 import { launchImageLibrary } from 'react-native-image-picker';
 import NavbarCard from '../../components/NavbarCard';
 import NotificationCard from '../../components/NotificationCard';
+import { UserContext } from '../../context/UserContext';
 
-
-const ManagerUser = () => {
+const ManagerUser = ({navigation}) => {
     const [nguoiDung, setNguoiDung] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [image, setImage] = useState('');
@@ -25,6 +25,7 @@ const ManagerUser = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editUserId, setEditUserId] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
+    const {user} = useContext(UserContext);
     const [newSpaceUser, setNewSpaceUser] = useState({
         hinh: '',
         hoTen: '',
@@ -80,6 +81,23 @@ const ManagerUser = () => {
     };
 
 
+
+    useEffect(() => {
+        if (user?.maVaiTro && user.maVaiTro !== '1') {
+            // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+            Alert.alert(
+                "Quyền hạn thay đổi",
+                "Bạn không có quyền truy cập vào màn hình này.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => navigation.navigate('LoginScreen')
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }, [user, navigation]);
     //Lay thong tin tren firebase xuong
     useEffect(() => {
         const unsubscribeNguoiDung = firestore().collection('NguoiDung').onSnapshot(
