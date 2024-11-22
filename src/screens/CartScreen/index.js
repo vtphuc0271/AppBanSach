@@ -62,13 +62,13 @@ const CartScreen = () => {
           const bookDetails = await getBookById(cartItem.id_Sach);
           if (bookDetails) {
             const author = authorsList.find(
-              a => a.id === bookDetails.id_TacGia,
+              a => a.id === bookDetails.tacGia,
             );
             const giaTien = Number(bookDetails.giaTien) || 0;
             return {
               ...cartItem,
               ...bookDetails,
-              tacGia: author ? author.tenTacGia : 'Tác giả không xác định',
+              tacGia: author ? author.name : 'Tác giả không xác định',
               giaTien: giaTien,
             };
           }

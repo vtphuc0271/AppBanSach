@@ -14,6 +14,8 @@ import AdminDecentScreen from './src/screens/PhanquyenScreen/danhsachnguoidung';
 import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
 import UserManagerScreen from './src/screens/UserManagerScreen/UserManager.js';
 import Adminpower from './src/screens/PhanquyenScreen/danhsachnguoidung.js';
+import Shipper from './src/screens/Shipper/MyOder.js';
+import ShipperDelivered from './src/screens/Shipper/OrderDelivered';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -34,6 +36,8 @@ export default function App() {
           <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
           <Stack.Screen name="UserManagerScreen" component={UserManagerScreen} />
+          <Stack.Screen name="Shipper" component={Shipper} />
+          <Stack.Screen name="ShipperDelivered" component={ShipperDelivered} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

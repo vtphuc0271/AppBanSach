@@ -18,6 +18,7 @@ const ManagerUser = () => {
     const [email, setEmail] = useState('');
     const [sdt, setSDT] = useState('');
     const [vaitro, setVaiTro] = useState();
+    const [image1, setImage1] = useState('https://firebasestorage.googleapis.com/v0/b/bansachnhom2.appspot.com/o/images%2Frn_image_picker_lib_temp_51914ec3-f61a-4530-ac71-323e773c26f0.jpg?alt=media&token=9616e23f-daa7-48e8-950a-4a010f77f7ab');
     const [expandedUserId, setExpandedUserId] = useState(null);
     const [showNotification, setShowNotification] = useState(false);
     const [notificationType, setNotificationType] = useState('');
@@ -129,65 +130,65 @@ const ManagerUser = () => {
 
         //Tao nguoi dung
         {
-        firebase
-            .auth()
-            .createUserWithEmailAndPassword(email, mk)
-            .then(async userCredential => {
-                const user = userCredential.user;
+            firebase
+                .auth()
+                .createUserWithEmailAndPassword(email, mk)
+                .then(async userCredential => {
+                    const user = userCredential.user;
 
-                let imageUrl = image; // URL ảnh hiện tại
-                if (selectedImage) {
-                    imageUrl = await uploadImage(selectedImage);
-                } else {
-                    imageUrl = '';
-                }
+                    let imageUrl = image; // URL ảnh hiện tại
+                    if (selectedImage) {
+                        imageUrl = await uploadImage(selectedImage);
+                    } else {
+                        imageUrl = 'https://firebasestorage.googleapis.com/v0/b/bansachnhom2.appspot.com/o/images%2Frn_image_picker_lib_temp_51914ec3-f61a-4530-ac71-323e773c26f0.jpg?alt=media&token=9616e23f-daa7-48e8-950a-4a010f77f7ab';
+                    }
 
-                // Lưu thông tin người dùng vào Firestore
-                await firestore().collection('NguoiDung').doc(user.uid).set({
-                    email,
-                    hinh: imageUrl,
-                    hoTen: ten,
-                    maVaiTro: '2',
-                    soDienThoai: sdt,
-                    createdAt: firestore.FieldValue.serverTimestamp(),
+                    // Lưu thông tin người dùng vào Firestore
+                    await firestore().collection('NguoiDung').doc(user.uid).set({
+                        email,
+                        hinh: imageUrl,
+                        hoTen: ten,
+                        maVaiTro: '2',
+                        soDienThoai: sdt,
+                        createdAt: firestore.FieldValue.serverTimestamp(),
+                    });
+
+                    // Hiển thị thông báo thành công
+                    Alert.alert('Thông báo', 'Tạo tài khoản thành công');
+                    // setNotificationType('success');
+                    // setNotificationMessage('Tạo tài khoản thành công!');
+                    // setShowNotification(true);
+
+                    // Đặt lại các trường nhập liệu sau khi đăng ký thành công
+                    setTen('');
+                    setEmail('');
+                    setMK('');
+                    setSDT('');
+                    setIsModalVisible(false);
+                })
+
+                .catch(error => {
+                    let message = 'Đăng ký thất bại. Vui lòng thử lại.';
+
+                    if (error.code === 'auth/email-already-in-use') {
+                        //message = 'Email đã được sử dụng. Vui lòng chọn email khác.';
+                        Alert.alert('Thông báo', 'Email đã được sử dụng. Vui lòng chọn email khác.');
+                    } else if (error.code === 'auth/invalid-email') {
+                        //message = 'Email không hợp lệ.';
+                        Alert.alert('Thông báo', 'Email không hợp lệ.');
+                    } else if (error.code === 'auth/weak-password') {
+                        //message = 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.';
+                        Alert.alert('Thông báo', 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.');
+                    }
+                    // console.log(`Thông báo lỗi: ${message}`); // Dòng kiểm tra
+                    // setNotificationType('error');
+                    // setNotificationMessage(message);
+                    // setShowNotification(true);
+                })
+                .finally(() => {
+                    //Đảm bảo rằng modal chỉ đóng khi quá trình đăng ký thành công
+                    //setIsModalVisible(false); // Đừng gọi ở đây!
                 });
-
-                // Hiển thị thông báo thành công
-                Alert.alert('Thông báo', 'Tạo tài khoản thành công');
-                // setNotificationType('success');
-                // setNotificationMessage('Tạo tài khoản thành công!');
-                // setShowNotification(true);
-
-                // Đặt lại các trường nhập liệu sau khi đăng ký thành công
-                setTen('');
-                setEmail('');
-                setMK('');
-                setSDT('');
-                setIsModalVisible(false);
-            })
-
-            .catch(error => {
-                let message = 'Đăng ký thất bại. Vui lòng thử lại.';
-
-                if (error.code === 'auth/email-already-in-use') {
-                    //message = 'Email đã được sử dụng. Vui lòng chọn email khác.';
-                    Alert.alert('Thông báo', 'Email đã được sử dụng. Vui lòng chọn email khác.');
-                } else if (error.code === 'auth/invalid-email') {
-                    //message = 'Email không hợp lệ.';
-                    Alert.alert('Thông báo', 'Email không hợp lệ.');
-                } else if (error.code === 'auth/weak-password') {
-                    //message = 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.';
-                    Alert.alert('Thông báo', 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.');
-                }
-                // console.log(`Thông báo lỗi: ${message}`); // Dòng kiểm tra
-                // setNotificationType('error');
-                // setNotificationMessage(message);
-                // setShowNotification(true);
-            })
-            .finally(() => {
-                //Đảm bảo rằng modal chỉ đóng khi quá trình đăng ký thành công
-                //setIsModalVisible(false); // Đừng gọi ở đây!
-            });
         }
 
     };
@@ -352,12 +353,12 @@ const ManagerUser = () => {
                 </View>
 
                 <ScrollView>
-                    {filteredUser.map((nguoi) => ( 
-                        <TouchableOpacity key={nguoi.id} style={styles.khungItem} onPress={() => {toggleExpand(nguoi.id)}}>
+                    {filteredUser.map((nguoi) => (
+                        <TouchableOpacity key={nguoi.id} style={styles.khungItem} onPress={() => { toggleExpand(nguoi.id) }}>
                             <View style={{ flexDirection: "row" }}>
                                 {nguoi.hinh ? (
                                     <Image source={{ uri: nguoi.hinh }} style={styles.anh} />
-                                    
+
                                 ) : (
                                     <Image source={require('../../assets/default.png')} style={styles.anh} />
                                 )}
@@ -407,7 +408,7 @@ const ManagerUser = () => {
 
                         <TouchableOpacity onPress={openImagePicker}>
                             <Image
-                                source={selectedImage ? { uri: selectedImage } : require('../../assets/ronadol.png')}
+                                source={{ uri: selectedImage ? selectedImage : image || image1 }}  // Kiểm tra nếu selectedImage có giá trị thì hiển thị ảnh đó, nếu không thì dùng ảnh mặc định
                                 style={styles.imagePlaceholder}
                             />
                         </TouchableOpacity>
