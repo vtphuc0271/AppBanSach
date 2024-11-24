@@ -10,9 +10,9 @@ import {
 import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/auth';
 import '@react-native-firebase/firestore';
-import NotificationCard from '../../components/NotificationCard';
+import NotificationCard from '../../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
-import NavbarCard from '../../components/NavbarCard';
+import NavbarCard from '../../../components/NavbarCard';
 
 export default function App() {
   const navigation = useNavigation();

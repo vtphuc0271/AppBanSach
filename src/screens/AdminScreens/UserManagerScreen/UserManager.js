@@ -5,8 +5,8 @@ import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import firebase from '@react-native-firebase/app';
 import { launchImageLibrary } from 'react-native-image-picker';
-import NavbarCard from '../../components/NavbarCard';
-import NotificationCard from '../../components/NotificationCard';
+import NavbarCard from '../../../components/NavbarCard';
+import NotificationCard from '../../../components/NotificationCard';
 
 
 const ManagerUser = () => {
@@ -347,7 +347,7 @@ const ManagerUser = () => {
                         placeholder="Tìm kiếm...."
                     />
                     <TouchableOpacity>
-                        <Image style={styles.searchIcon} source={require('../../assets/search.png')} />
+                        <Image style={styles.searchIcon} source={require('../../../assets/search.png')} />
                     </TouchableOpacity>
                 </View>
 
@@ -359,7 +359,7 @@ const ManagerUser = () => {
                                     <Image source={{ uri: nguoi.hinh }} style={styles.anh} />
                                     
                                 ) : (
-                                    <Image source={require('../../assets/default.png')} style={styles.anh} />
+                                    <Image source={require('../../../assets/default.png')} style={styles.anh} />
                                 )}
                                 <View style={styles.thongTin}>
                                     <Text style={styles.thongtin1}>Tên: {nguoi.hoTen}</Text>
@@ -369,15 +369,15 @@ const ManagerUser = () => {
                                     {expandedUserId === nguoi.id && (
                                         <View style={styles.expandedDetails}>
                                             <TouchableOpacity style={styles.buttonGreen}>
-                                                <Image style={styles.icon1} source={require('../../assets/XemDH.png')} />
+                                                <Image style={styles.icon1} source={require('../../../assets/XemDH.png')} />
                                                 <Text style={styles.buttonText}>Xem đơn hàng</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity style={styles.buttonGray} onPress={() => handleEditUser(nguoi)}>
-                                                <Image style={styles.icon1} source={require('../../assets/SuaTT.png')} />
+                                                <Image style={styles.icon1} source={require('../../../assets/SuaTT.png')} />
                                                 <Text style={styles.buttonText}>Sửa thông tin</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity style={styles.buttonRed} onPress={() => handleBlock(nguoi)}>
-                                                <Image style={styles.icon1} source={require('../../assets/ChanTK.png')} />
+                                                <Image style={styles.icon1} source={require('../../../assets/ChanTK.png')} />
                                                 <Text style={styles.buttonText}>Chặn tài khoản</Text>
                                             </TouchableOpacity>
                                         </View>
@@ -389,7 +389,7 @@ const ManagerUser = () => {
                 </ScrollView>
 
                 <TouchableOpacity onPress={toggleAdd}>
-                    <Image style={styles.icon2} source={require('../../assets/ThemND.png')} />
+                    <Image style={styles.icon2} source={require('../../../assets/ThemND.png')} />
                 </TouchableOpacity>
             </View>
 
@@ -407,7 +407,7 @@ const ManagerUser = () => {
 
                         <TouchableOpacity onPress={openImagePicker}>
                             <Image
-                                source={selectedImage ? { uri: selectedImage } : require('../../assets/ronadol.png')}
+                                source={selectedImage ? { uri: selectedImage } : require('../../../assets/ronadol.png')}
                                 style={styles.imagePlaceholder}
                             />
                         </TouchableOpacity>

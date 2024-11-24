@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Modal, Image } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import NavbarCard from '../../components/NavbarCard';
+import NavbarCard from '../../../components/NavbarCard';
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -168,7 +168,7 @@ const CategoryList = () => {
             />
             <TouchableOpacity onPress={handleSearchClick}>
               <Image
-                source={require('../../assets/iconsearch.png')}
+                source={require('../../../assets/iconsearch.png')}
                 style={styles.searchIcon}
               />
             </TouchableOpacity>
@@ -191,13 +191,13 @@ const CategoryList = () => {
               <View style={styles.actionIcons}>
                 <TouchableOpacity onPress={() => handleEdit(category.id)}>
                   <Image
-                    source={require('../../assets/iconsua.png')}
+                    source={require('../../../assets/iconsua.png')}
                     style={styles.iconxoasua}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(category.id)}>
                   <Image
-                    source={require('../../assets/iconxoa.png')}
+                    source={require('../../../assets/iconxoa.png')}
                     style={styles.iconxoasua}
                   />
                 </TouchableOpacity>

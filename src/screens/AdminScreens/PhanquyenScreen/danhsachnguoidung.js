@@ -1,8 +1,8 @@
 import React, { useEffect,useState,useContext } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import NavbarCard from '../../components/NavbarCard';
-import { UserContext } from '../../context/UserContext';
+import NavbarCard from '../../../components/NavbarCard';
+import { UserContext } from '../../../context/UserContext';
 
 const UserListScreen = ({navigation}) => {
     const [users, setUsers] = useState([]);
@@ -97,7 +97,7 @@ const UserListScreen = ({navigation}) => {
                 <View style={styles.iconContainer}>
                     <TouchableOpacity onPress={() => openModal(item.id, item.maVaiTro)}>
                         <Image
-                            source={require('../../assets/iconmenuquantri.png')}
+                            source={require('../../../assets/iconmenuquantri.png')}
                             style={styles.iconmenuquantri}
                         />
                     </TouchableOpacity>
@@ -118,7 +118,7 @@ const UserListScreen = ({navigation}) => {
                 />
                 <TouchableOpacity>
                     <Image
-                        source={require('../../assets/iconsearch.png')}
+                        source={require('../../../assets/iconsearch.png')}
                         style={styles.searchIcon}
                     />
                 </TouchableOpacity>

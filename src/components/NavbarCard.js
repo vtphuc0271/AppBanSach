@@ -405,7 +405,11 @@ const NarbarCard = ({ScreenName, iconShop = false}) => {
                 </TouchableOpacity>
               ) : null}
               {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent}
+                onPress={() => {
+                  navigation.navigate('OrderListScreen');
+                  closeMenu();
+                }}>
                   <View style={{paddingLeft: 20}}></View>
                   <Image
                     source={require('../assets/iconmenuquantri.png')}

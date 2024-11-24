@@ -9,16 +9,16 @@ import {
   TextInput,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
+import NavbarCard from '../../../components/NavbarCard';
+import {UserContext} from '../../../context/UserContext';
 import {useNavigation} from '@react-navigation/native';
 import {
   getUserCart,
   updateCartQuantity,
   removeCartItem,
-} from '../../services/cartService';
-import {getBookById} from '../../services/bookService';
-import {getAllAuthors} from '../../services/authorService';
+} from '../../../services/cartService';
+import {getBookById} from '../../../services/bookService';
+import {getAllAuthors} from '../../../services/authorService';
 
 const CartScreen = () => {
   const {user} = useContext(UserContext);
@@ -26,72 +26,93 @@ const CartScreen = () => {
   const [authors, setAuthors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
-
+  console.log(user);
+  // Hàm tính tổng tiền trong giỏ hàng
   const getTotalPrice = () => {
     return cartItems.reduce(
       (total, item) =>
-        total + (item.giaTien || 0) * parseInt(item.soLuong || '1', 10),
+        total + (item.giaMua || 0) * parseInt(item.soLuong || '1', 10),
       0,
     );
   };
 
+  // Tăng số lượng sản phẩm
   const handleIncreaseQuantity = async (userId, itemId) => {
     await updateCartQuantity(userId, itemId, 'increase');
     fetchCartItemsWithDetails();
   };
 
+  // Giảm số lượng sản phẩm
   const handleDecreaseQuantity = async (userId, itemId) => {
     await updateCartQuantity(userId, itemId, 'decrease');
     fetchCartItemsWithDetails();
   };
 
+  // Xóa sản phẩm khỏi giỏ hàng
   const handleRemoveItem = async (userId, itemId) => {
     setIsLoading(true);
     await removeCartItem(userId, itemId);
     fetchCartItemsWithDetails();
   };
 
-  const fetchCartItemsWithDetails = async () => {
-    try {
-      const cartItems = await getUserCart(user.uid);
-      const authorsList = await getAllAuthors();
-      //console.log("authorsList",authorsList);
-      setAuthors(authorsList);
+  // Lấy danh sách sản phẩm trong giỏ hàng với chi tiết sách và tác giả
+  const fetchCartItemsWithDetails = () => {
+    const cartRef = firestore()
+      .collection('GioHang')
+      .doc(user.uid)
+      .collection('Items');
 
-      const itemsWithDetails = await Promise.all(
-        cartItems.map(async cartItem => {
-          const bookDetails = await getBookById(cartItem.id_Sach);
-          //console.log("bookDetails",bookDetails);
-          if (bookDetails) {
-            const author = authorsList.find(
-              a => a.id === bookDetails.tacGia,
-            );
-            const giaTien = Number(bookDetails.giaTien) || 0;
-            return {
-              ...cartItem,
-              ...bookDetails,
-              tacGia: author ? author.name : 'Tác giả không xác định',
-              giaTien: giaTien,
-            };
-          }
-          return null;
-        }),
-      );
-      setCartItems(itemsWithDetails.filter(item => item !== null));
-    } catch (error) {
-      console.error(
-        'Lỗi khi lấy giỏ hàng với chi tiết sách và tác giả:',
-        error,
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    // Sử dụng listener onSnapshot để cập nhật giỏ hàng theo thời gian thực
+    const unsubscribe = cartRef.onSnapshot(async snapshot => {
+      try {
+        const cartItems = snapshot.docs.map(doc => ({
+          id_Sach: doc.id,
+          soLuong: doc.data().soLuong || 1,
+          giaMua: Number(doc.data().giaMua),
+        }));
+
+        const authorsList = await getAllAuthors(); // Lấy danh sách tác giả
+        setAuthors(authorsList);
+
+        // Lấy chi tiết sách và kết hợp thông tin giỏ hàng
+        const itemsWithDetails = await Promise.all(
+          cartItems.map(async cartItem => {
+            const bookDetails = await getBookById(cartItem.id_Sach);
+            if (bookDetails) {
+              const author = authorsList.find(a => a.id === bookDetails.tacGia);
+              const giaTien = Number(bookDetails.giaTien) || 0;
+              return {
+                ...cartItem,
+                ...bookDetails,
+                tacGia: author ? author.name : 'Tác giả không xác định',
+                giaTien: giaTien,
+              };
+            }
+            return null;
+          }),
+        );
+
+        setCartItems(itemsWithDetails.filter(item => item !== null)); // Cập nhật giỏ hàng
+      } catch (error) {
+        console.error(
+          'Lỗi khi cập nhật giỏ hàng với chi tiết sách và tác giả:',
+          error,
+        );
+      } finally {
+        setIsLoading(false); // Tắt trạng thái loading
+      }
+    });
+
+    // Trả về hàm hủy listener để gọi trong useEffect khi cần
+    return unsubscribe;
   };
 
+  console.log('cartItems', cartItems);
   useEffect(() => {
     if (user && user.uid) {
       setIsLoading(true);
-      fetchCartItemsWithDetails();
+      const unsubscribe = fetchCartItemsWithDetails();
+      return () => unsubscribe();
     }
   }, [user]);
 
@@ -102,19 +123,19 @@ const CartScreen = () => {
         <Text style={styles.title}>{item.tenSach}</Text>
         <Text>{item.tacGia}</Text>
         <Text style={styles.price}>
-          {Number(item.giaTien).toLocaleString()} VNĐ
+          {Number(item.giaMua).toLocaleString()} VNĐ
         </Text>
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <TouchableOpacity
             style={styles.removeButton}
-            onPress={() => handleRemoveItem(user.uid, item.id_GioHang)}
+            onPress={() => handleRemoveItem(user.uid, item.id_Sach)}
             disabled={isLoading}>
             <Text style={styles.removeText}>Xóa</Text>
           </TouchableOpacity>
           <View style={styles.quantityContainer}>
             <TouchableOpacity
               style={styles.quantityIncrementButton}
-              onPress={() => handleDecreaseQuantity(user.uid, item.id_GioHang)}
+              onPress={() => handleDecreaseQuantity(user.uid, item.id_Sach)}
               disabled={isLoading}>
               <Text style={styles.quantityText}>-</Text>
             </TouchableOpacity>
@@ -122,7 +143,7 @@ const CartScreen = () => {
 
             <TouchableOpacity
               style={styles.quantityDecrementButton}
-              onPress={() => handleIncreaseQuantity(user.uid, item.id_GioHang)}
+              onPress={() => handleIncreaseQuantity(user.uid, item.id_Sach)}
               disabled={isLoading}>
               <Text style={styles.quantityText}>+</Text>
             </TouchableOpacity>

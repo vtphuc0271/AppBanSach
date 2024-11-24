@@ -5,7 +5,7 @@ import CheckBox from '@react-native-community/checkbox';
 import { launchImageLibrary } from 'react-native-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import NavbarCard from '../../components/NavbarCard';
+import NavbarCard from '../../../components/NavbarCard';
 
 const BookManagement = () => {
   const [Sach, setBooks] = useState([]);
@@ -335,7 +335,7 @@ const BookManagement = () => {
                 {book.anhSach ? (
                   <Image source={{ uri: book.anhSach }} style={styles.categoryImage} />
                 ) : (
-                  <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
+                  <Image source={require('../../../assets/default.png')} style={styles.categoryImage} />
                 )}
               </View>
               <Text style={[styles.categoryName, { flex: 1.8 }]}>{book.tenSach}</Text>
@@ -350,10 +350,10 @@ const BookManagement = () => {
                     setModalVisible(true);
                   }}
                 >
-                  <Image source={require('../../assets/edit.png')} />
+                  <Image source={require('../../../assets/edit.png')} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(book.id)}>
-                  <Image source={require('../../assets/delete.png')} />
+                  <Image source={require('../../../assets/delete.png')} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -387,7 +387,7 @@ const BookManagement = () => {
                           {newAuthorImage ? (
                             <Image source={{ uri: newAuthorImage }} style={styles.imagePreview} />
                           ) : (
-                            <Image source={require('../../assets/default.png')} style={styles.imagePreview} />
+                            <Image source={require('../../../assets/default.png')} style={styles.imagePreview} />
                           )}
                         </TouchableOpacity>
                       </View>
@@ -440,7 +440,7 @@ const BookManagement = () => {
                     {newBook.anhSach ? (
                       <Image source={{ uri: newBook.anhSach }} style={{ width: 100, height: 100, margin: 10 }} />
                     ) : (
-                      <Image source={require('../../assets/default.png')} style={{ width: 100, height: 100, margin: 10 }} />
+                      <Image source={require('../../../assets/default.png')} style={{ width: 100, height: 100, margin: 10 }} />
                     )}
                   </TouchableOpacity>
                 </View>

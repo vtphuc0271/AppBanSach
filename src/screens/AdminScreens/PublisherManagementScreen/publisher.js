@@ -13,7 +13,7 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import {launchImageLibrary} from 'react-native-image-picker';
-import NavbarCard from '../../components/NavbarCard';
+import NavbarCard from '../../../components/NavbarCard';
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [searchText, setSearchText] = useState('');
@@ -174,7 +174,7 @@ const CategoryList = () => {
               onChangeText={setSearchText}
             />
             <Image
-                source={require('../../assets/iconsearch.png')}
+                source={require('../../../assets/iconsearch.png')}
                 style={styles.searchIcon}
               />
           </View>
@@ -200,10 +200,10 @@ const CategoryList = () => {
               </Text>
               <View style={[styles.actionIcons, {flex: 2}]}>
                 <TouchableOpacity onPress={() => handleEdit(category.id)}>
-                  <Image source={require('../../assets/edit.png')} />
+                  <Image source={require('../../../assets/edit.png')} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(category.id)}>
-                  <Image source={require('../../assets/delete.png')} />
+                  <Image source={require('../../../assets/delete.png')} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -250,7 +250,7 @@ const CategoryList = () => {
                   />
                 ) : (
                   <Image
-                    source={require('../../assets/default.png')}
+                    source={require('../../../assets/default.png')}
                     style={{width: 100, height: 100, margin: 10}}
                   />
                 )}

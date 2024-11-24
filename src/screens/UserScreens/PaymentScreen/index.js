@@ -11,12 +11,12 @@ import {
   AppState,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
-import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
-import {getUserCart} from '../../services/cartService';
-import {getBookById} from '../../services/bookService';
+import NavbarCard from '../../../components/NavbarCard';
+import {UserContext} from '../../../context/UserContext';
+import {getUserCart} from '../../../services/cartService';
+import {getBookById} from '../../../services/bookService';
 import firestore from '@react-native-firebase/firestore';
-import NotificationCard from '../../components/NotificationCard';
+import NotificationCard from '../../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
 
 const PaymentScreen = ({route}) => {
@@ -26,7 +26,7 @@ const PaymentScreen = ({route}) => {
   const [open, setOpen] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [orderId, setOrderId] = useState(null);
-
+  console.log('cartItems', cartItems);
   const navigation = useNavigation();
   const {id_Sach} = route.params || {};
 
@@ -41,48 +41,76 @@ const PaymentScreen = ({route}) => {
   const accountName = 'HO%20QUANG%20TRUONG';
   const qrUrl = `https://img.vietqr.io/image/${bankCode}-${accountNumber}-${template}.jpg?amount=${totalPrice}&addInfo=${orderId}&accountName=${accountName}`;
 
-  const fetchBookDetails = async id_Sach => {
-    try {
-      const bookDetails = await getBookById(id_Sach); // Hàm truy vấn chi tiết sách theo id
-      if (bookDetails) {
-        setCartItems([
-          {
-            id_Sach: id_Sach,
-            tenSach: bookDetails.tenSach,
-            soLuong: '1',
-            giaTien: Number(bookDetails.giaTien) || 0,
-          },
-        ]);
-        setTotalPrice(Number(bookDetails.giaTien) || 0);
+  const fetchBookDetails = id_Sach => {
+    const bookRef = firestore().collection('Sach').doc(id_Sach);
+
+    // Sử dụng `onSnapshot` để theo dõi thời gian thực
+    const unsubscribe = bookRef.onSnapshot(docSnapshot => {
+      try {
+        if (docSnapshot.exists) {
+          const bookDetails = docSnapshot.data();
+          setCartItems([
+            {
+              id_Sach: id_Sach,
+              tenSach: bookDetails.tenSach,
+              soLuong: '1',
+              giaMua: Number(bookDetails.giaTien) || 0,
+            },
+          ]);
+          setTotalPrice(Number(bookDetails.giaTien) || 0);
+        } else {
+          console.error(`Không tìm thấy sách với ID: ${id_Sach}`);
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy chi tiết sách:', error);
       }
-    } catch (error) {
-      console.error('Lỗi khi lấy chi tiết sách:', error);
-    }
+    });
+
+    // Trả về hàm hủy listener để sử dụng khi cần
+    return unsubscribe;
   };
 
-  const fetchCartItemsWithDetails = async () => {
-    try {
-      const cartItems = await getUserCart(user.uid);
-      if (cartItems.length > 0) {
-        const itemsWithDetails = await Promise.all(
-          cartItems.map(async cartItem => {
-            const bookDetails = await getBookById(cartItem.id_Sach);
-            if (bookDetails) {
-              return {
-                ...cartItem,
-                tenSach: bookDetails.tenSach,
-                soLuong: cartItem.soLuong,
-                giaTien: Number(bookDetails.giaTien) || 0,
-              };
-            }
-            return null;
-          }),
-        );
-        setCartItems(itemsWithDetails.filter(item => item !== null));
+  const fetchCartItemsWithDetails = () => {
+    const cartRef = firestore()
+      .collection('GioHang')
+      .doc(user.uid)
+      .collection('Items');
+
+    // Sử dụng `onSnapshot` để theo dõi thời gian thực
+    const unsubscribe = cartRef.onSnapshot(async snapshot => {
+      try {
+        const cartItems = snapshot.docs.map(doc => ({
+          id_Sach: doc.id,
+          soLuong: doc.data().soLuong || 1,
+          giaMua: Number(doc.data().giaMua) || 0,
+        }));
+
+        if (cartItems.length > 0) {
+          const itemsWithDetails = await Promise.all(
+            cartItems.map(async cartItem => {
+              const bookDetails = await getBookById(cartItem.id_Sach);
+              if (bookDetails) {
+                return {
+                  ...cartItem,
+                  tenSach: bookDetails.tenSach,
+                  soLuong: cartItem.soLuong,
+                  giaTien: Number(bookDetails.giaTien) || 0,
+                };
+              }
+              return null;
+            }),
+          );
+          setCartItems(itemsWithDetails.filter(item => item !== null));
+        } else {
+          setCartItems([]); // Xóa danh sách nếu không còn sản phẩm
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy giỏ hàng với chi tiết sách:', error);
       }
-    } catch (error) {
-      console.error('Lỗi khi lấy giỏ hàng với chi tiết sách:', error);
-    }
+    });
+
+    // Trả về hàm hủy listener để sử dụng khi cần
+    return unsubscribe;
   };
 
   useEffect(() => {
@@ -122,7 +150,7 @@ const PaymentScreen = ({route}) => {
   const getTotalPrice = () => {
     return cartItems.reduce(
       (total, item) =>
-        total + (item.giaTien || 0) * parseInt(item.soLuong || '1', 10),
+        total + (item.giaMua || 0) * parseInt(item.soLuong || '1', 10),
       0,
     );
   };
@@ -131,10 +159,16 @@ const PaymentScreen = ({route}) => {
     try {
       const donHangRef = await firestore().collection('DonHang').add({
         id_NguoiDung: user.uid,
-        diaChi: user.diaChi,
-        soDienThoai: user.soDienThoai,
+        hoTen: hoTen,
+        diaChi: diaChi,
+        soDienThoai: soDienThoai,
         ngayTao: new Date(),
         tongTien: 0,
+        tinhTrangDonHang: 0,
+        notEnough: 0,
+        ngayThanhToan: '',
+        phuongThucThanhToan: '',
+        tinhTrangThanhToan: 0,
       });
       setOrderId(donHangRef.id);
     } catch (error) {
@@ -144,24 +178,35 @@ const PaymentScreen = ({route}) => {
 
   const finalizeOrder = async () => {
     try {
+      if (!orderId) {
+        throw new Error('Không tìm thấy orderId để cập nhật đơn hàng.');
+      }
+
       const tongTien = getTotalPrice();
+
+      // Cập nhật thông tin đơn hàng
       await firestore().collection('DonHang').doc(orderId).update({
         tongTien: tongTien,
       });
 
+      // Lưu chi tiết đơn hàng vào `ChiTietDonHang`
+      const chiTietDonHangRef = firestore()
+        .collection('ChiTietDonHang')
+        .doc(orderId);
       const batch = firestore().batch();
+
       cartItems.forEach(item => {
-        const chiTietRef = firestore().collection('ChiTietDonHang').doc();
-        batch.set(chiTietRef, {
-          id_DonHang: orderId,
-          id_Sach: item.id_Sach,
+        const itemRef = chiTietDonHangRef.collection('Items').doc(item.id_Sach);
+        batch.set(itemRef, {
           soLuong: parseInt(item.soLuong || '1', 10),
+          giaMua: item.giaMua,
         });
       });
+
       await batch.commit();
       console.log('Cập nhật đơn hàng thành công.');
     } catch (error) {
-      console.error('Lỗi khi cập nhật đơn hàng:', error);
+      console.error('Lỗi khi hoàn thiện đơn hàng:', error);
     }
   };
 
@@ -180,9 +225,7 @@ const PaymentScreen = ({route}) => {
   const toggleModal = async () => {
     if (!hoTen.trim() || !diaChi.trim() || !soDienThoai.trim()) {
       setNotificationType('error');
-      setNotificationMessage(
-        'Vui lòng nhập đầy đủ thông tin',
-      );
+      setNotificationMessage('Vui lòng nhập đầy đủ thông tin');
       setShowNotification(true);
       return;
     }
@@ -200,104 +243,131 @@ const PaymentScreen = ({route}) => {
 
   const confirmPayment = async () => {
     try {
-      if (paymentMethod == 'QR') {
-        // Cập nhật đơn hàng
+      const tongTien = getTotalPrice();
+
+      if (!tongTien || tongTien <= 0) {
+        throw new Error('Giá trị đơn hàng không hợp lệ.');
+      }
+
+      if (paymentMethod === 'QR') {
+        // Xác nhận và cập nhật đơn hàng
         await finalizeOrder();
 
-        // Xóa tất cả sản phẩm trong giỏ hàng của người dùng
+        // Cập nhật thông tin thanh toán trực tiếp vào đơn hàng
+        await firestore()
+          .collection('DonHang')
+          .doc(orderId) // orderId là ID của đơn hàng
+          .update({
+            ngayThanhToan: new Date(),
+            phuongThucThanhToan: 'QR',
+            tinhTrangThanhToan: 0, // Đã thanh toán
+          });
+
+        // Xóa giỏ hàng nếu thanh toán toàn bộ
         if (!id_Sach) {
-          await firestore()
-            .collection('GioHang')
-            .where('id_NguoiDung', '==', user.uid)
-            .get()
-            .then(querySnapshot => {
-              querySnapshot.forEach(doc => {
-                doc.ref.delete(); // Xóa từng sản phẩm trong giỏ hàng
-              });
+          const gioHangRef = firestore().collection('GioHang').doc(user.uid);
+
+          // Kiểm tra và lấy các tài liệu con nếu có
+          const itemsRef = gioHangRef.collection('Items');
+          const snapshot = await itemsRef.get();
+
+          if (!snapshot.empty) {
+            // Xóa từng tài liệu trong subcollection 'Items'
+            const batch = firestore().batch();
+            snapshot.forEach(doc => {
+              batch.delete(doc.ref);
             });
+
+            // Thực hiện xóa batch
+            await batch.commit();
+            console.log('Đã xóa tất cả items trong giỏ hàng.');
+          } else {
+            console.log('snapshot.empty');
+          }
+
+          // Sau khi xóa các items, xóa tài liệu chính
+          await gioHangRef.delete();
+          console.log('Giỏ hàng đã được xóa.');
         }
 
-        // Tạo bảng ThanhToan với các thông tin cần thiết
-        const thanhToanRef = await firestore().collection('ThanhToan').add({
-          id_DonHang: orderId,
-          ngayThanhToan: new Date(),
-          gia: getTotalPrice(),
-          phuongThucThanhToan: paymentMethod,
-          tinhTrangThanhToan: 1, // Có thể thay đổi theo tình trạng
-        });
-
-        // Đóng modal và hiển thị thông báo thành công
+        // Hiển thị thông báo thành công
         setModalVisible(false);
         setNotificationType('success');
-        setNotificationMessage(
-          'Bạn đã đặt hàng thành công! (Vui lòng chờ xác nhận thanh toán và theo dõi tình trạng đơn hàng)',
-        );
+        setNotificationMessage('Bạn đã thanh toán thành công qua QR!');
         setShowNotification(true);
+
         setTimeout(() => {
           navigation.navigate('MainScreen');
         }, 3000);
-        console.log('Thanh toán thành công và giỏ hàng đã được xóa.');
-      } else {
-        const tongTien = getTotalPrice();
-
-        // Tạo đơn hàng
+      } else if (paymentMethod === 'cod') {
+        // Tạo đơn hàng và chi tiết nếu chọn COD
         const donHangRef = await firestore().collection('DonHang').add({
           id_NguoiDung: user.uid,
-          diaChi: user.diaChi,
-          soDienThoai: user.soDienThoai,
+          hoTen: hoTen,
+          diaChi: diaChi,
+          soDienThoai: soDienThoai,
           ngayTao: new Date(),
           tongTien: tongTien,
+          notEnough: 0,
+          tinhTrangDonHang: 0, // Đơn hàng đang chờ xử lý
+          tinhTrangThanhToan: 0, // Chưa thanh toán
+          phuongThucThanhToan: 'cod',
+          ngayThanhToan: null, // Chưa có ngày thanh toán
         });
-        const orderId = donHangRef.id; // Lấy id của đơn hàng mới tạo
+        const codOrderId = donHangRef.id;
 
-        // Tạo chi tiết đơn hàng
         const batch = firestore().batch();
         cartItems.forEach(item => {
-          const chiTietRef = firestore().collection('ChiTietDonHang').doc();
-          batch.set(chiTietRef, {
-            id_DonHang: orderId,
-            id_Sach: item.id_Sach,
+          const itemRef = firestore()
+            .collection('ChiTietDonHang')
+            .doc(codOrderId)
+            .collection('Items')
+            .doc(item.id_Sach);
+          batch.set(itemRef, {
             soLuong: parseInt(item.soLuong || '1', 10),
+            giaMua: item.giaMua,
           });
         });
         await batch.commit();
 
-        // Tạo bảng ThanhToan cho phương thức COD
-        const thanhToanRef = await firestore().collection('ThanhToan').add({
-          id_DonHang: orderId,
-          ngayThanhToan: new Date(),
-          gia: tongTien,
-          phuongThucThanhToan: 'cod', // COD ở đây
-          tinhTrangThanhToan: 1, // Có thể thay đổi theo tình trạng (ví dụ: đã thanh toán)
-        });
-
-        // Xóa tất cả sản phẩm trong giỏ hàng của người dùng
+        // Xóa giỏ hàng nếu có
         if (!id_Sach) {
-          await firestore()
-            .collection('GioHang')
-            .where('id_NguoiDung', '==', user.uid)
-            .get()
-            .then(querySnapshot => {
-              querySnapshot.forEach(doc => {
-                doc.ref.delete(); // Xóa từng sản phẩm trong giỏ hàng
-              });
+          const gioHangRef = firestore().collection('GioHang').doc(user.uid);
+
+          const itemsRef = gioHangRef.collection('Items');
+          const snapshot = await itemsRef.get();
+
+          if (!snapshot.empty) {
+            const batch = firestore().batch();
+            snapshot.forEach(doc => {
+              batch.delete(doc.ref);
             });
+
+            await batch.commit();
+            console.log('Đã xóa tất cả items trong giỏ hàng.');
+          }
+
+          await gioHangRef.delete();
+          console.log('Giỏ hàng đã được xóa.');
         }
 
-        // Đóng modal và hiển thị thông báo thành công
-        setModalVisible(false);
         setNotificationType('success');
         setNotificationMessage(
-          'Bạn đã đặt hàng thành công! (Vui lòng chờ xác nhận thanh toán và theo dõi tình trạng đơn hàng)',
+          'Bạn đã đặt hàng thành công! Vui lòng thanh toán khi nhận hàng.',
         );
         setShowNotification(true);
+
         setTimeout(() => {
           navigation.navigate('MainScreen');
         }, 3000);
-        console.log('Thanh toán thành công và giỏ hàng đã được xóa.');
+      } else {
+        throw new Error('Phương thức thanh toán không hợp lệ.');
       }
     } catch (error) {
       console.error('Lỗi khi xác nhận thanh toán:', error);
+      setNotificationType('error');
+      setNotificationMessage('Xác nhận thanh toán thất bại. Vui lòng thử lại.');
+      setShowNotification(true);
     }
   };
 
@@ -314,31 +384,31 @@ const PaymentScreen = ({route}) => {
       <View style={styles.container}>
         {/* Thông tin người dùng */}
         <View style={styles.infoSection}>
-      <View style={styles.row}>
-        <Text style={styles.label}>Họ tên:</Text>
-        <TextInput
-          style={styles.input}
-          value={hoTen}
-          onChangeText={(text) => setHoTen(text)}
-        />
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Địa chỉ:</Text>
-        <TextInput
-          style={styles.input}
-          value={diaChi}
-          onChangeText={(text) => setDiaChi(text)}
-        />
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>SĐT:</Text>
-        <TextInput
-          style={styles.input}
-          value={soDienThoai}
-          onChangeText={(text) => setSoDienThoai(text)}
-        />
-      </View>
-    </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Họ tên:</Text>
+            <TextInput
+              style={styles.input}
+              value={hoTen}
+              onChangeText={text => setHoTen(text)}
+            />
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Địa chỉ:</Text>
+            <TextInput
+              style={styles.input}
+              value={diaChi}
+              onChangeText={text => setDiaChi(text)}
+            />
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>SĐT:</Text>
+            <TextInput
+              style={styles.input}
+              value={soDienThoai}
+              onChangeText={text => setSoDienThoai(text)}
+            />
+          </View>
+        </View>
 
         {/* Giỏ hàng */}
         <View style={styles.cartSection}>
@@ -355,7 +425,7 @@ const PaymentScreen = ({route}) => {
                 <Text style={styles.itemName}>{item.tenSach}</Text>
                 <Text style={styles.itemQuantity}>{item.soLuong}</Text>
                 <Text style={styles.itemPrice}>
-                  {Number(item.giaTien).toLocaleString()} VNĐ
+                  {Number(item.giaMua * item.soLuong).toLocaleString()} VNĐ
                 </Text>
               </View>
             )}
@@ -398,7 +468,7 @@ const PaymentScreen = ({route}) => {
           <View style={styles.modalContent}>
             <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
               <Image
-                source={require('../../assets/closeqr.png')}
+                source={require('../../../assets/closeqr.png')}
                 resizeMode="contain"
               />
             </TouchableOpacity>

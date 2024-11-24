@@ -8,12 +8,13 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
+  Alert,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
+import NavbarCard from '../../../components/NavbarCard';
+import {UserContext} from '../../../context/UserContext';
 import {useNavigation} from '@react-navigation/native';
-
+import NotificationCard from '../../../components/NotificationCard';
 const TrangChuScreen = () => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
@@ -28,6 +29,10 @@ const TrangChuScreen = () => {
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
   const {user} = useContext(UserContext);
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState('');
   //console.log('day la user: ', user);
   const [data, setData] = useState([]);
 
@@ -174,43 +179,60 @@ const TrangChuScreen = () => {
     };
   }, []);
 
-  const addToCart = async (id_Sach, soLuong = 1) => {
-    if (!user?.uid) {
-      console.error('User chưa đăng nhập');
-      return;
-    }
-
+  const addToCart = async (idSach,giaMua, soLuong = 1) => {
     try {
-      const cartItemRef = firestore()
-        .collection('GioHang')
-        .doc(`${user.uid}_${id_Sach}`); // Dùng id_NguoiDung và id_Sach làm Document ID
-
-      const cartItemSnapshot = await cartItemRef.get();
-
-      if (cartItemSnapshot.exists) {
-        // Nếu sản phẩm đã tồn tại, tăng số lượng lên
-        const currentSoLuong = parseInt(cartItemSnapshot.data().soLuong) || 0;
-        await cartItemRef.update({
-          soLuong: (currentSoLuong + soLuong).toString(),
-        });
-      } else {
-        // Nếu sản phẩm chưa tồn tại, tạo mới với soLuong = 1
-        await cartItemRef.set({
-          id_NguoiDung: user.uid,
-          id_Sach,
-          soLuong: soLuong.toString(),
-        });
+      if (!user?.uid) {
+        setNotificationType('error');
+        setNotificationMessage('Bạn cần đăng nhập để đặt hàng');
+        setShowNotification(true);
+        return;
       }
-
-      console.log('Thêm vào giỏ hàng thành công');
+  
+      // Lấy reference tới collection 'Items' của người dùng trong giỏ hàng
+      const gioHangRef = firestore()
+        .collection('GioHang')
+        .doc(user.uid)
+        .collection('Items')
+        .doc(idSach); // Document cho từng sản phẩm
+  
+      // Kiểm tra nếu sản phẩm đã tồn tại trong giỏ hàng
+      const docSnapshot = await gioHangRef.get();
+  
+      if (!docSnapshot.exists) {
+        // Nếu sản phẩm chưa có trong giỏ, thêm mới với số lượng ban đầu
+        const initialData = {
+          soLuong: parseInt(soLuong),
+          giaMua: giaMua,
+        };
+        await gioHangRef.set(initialData);
+        console.log('Sản phẩm đã được thêm vào giỏ hàng.');
+      } else {
+        // Nếu sản phẩm đã tồn tại trong giỏ, cập nhật số lượng
+        const currentData = docSnapshot.data();
+        const newQuantity = currentData.soLuong + parseInt(soLuong);
+  
+        // Cập nhật lại số lượng sản phẩm trong giỏ
+        await gioHangRef.update({
+          soLuong: newQuantity,
+        });
+        console.log('Số lượng sản phẩm đã được cập nhật.');
+      }
     } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng: ', error);
+      console.error('Lỗi khi thêm vào giỏ hàng:', error.message);
     }
   };
+  
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
-    navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
+    if (!user?.uid) {
+      setNotificationType('error');
+      setNotificationMessage('Bạn cần đăng nhập để đặt hàng');
+      setShowNotification(true);
+      return;
+    } else {
+      navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
+    }
   };
 
   const displayLimitedData = (data, limit) => {
@@ -229,8 +251,8 @@ const TrangChuScreen = () => {
           key={i}
           source={
             i <= rating
-              ? require('../../assets/fullStar.png')
-              : require('../../assets/emptyStar.png')
+              ? require('../../../assets/fullStar.png')
+              : require('../../../assets/emptyStar.png')
           }
           style={styles.star}
         />,
@@ -255,7 +277,7 @@ const TrangChuScreen = () => {
               />
             ) : (
               <Image
-                source={require('../../assets/default.png')}
+                source={require('../../../assets/default.png')}
                 style={styles.categoryImage}
               />
             )}
@@ -285,10 +307,10 @@ const TrangChuScreen = () => {
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={styles.buttonAddToCart}
-                  onPress={() => addToCart(item.id)}>
+                  onPress={() => addToCart(item.id,item.giaTien)}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
                   <Image
-                    source={require('../../assets/themvaogio.png')}
+                    source={require('../../../assets/themvaogio.png')}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -297,7 +319,7 @@ const TrangChuScreen = () => {
                   onPress={() => handleBuyNow(item.id)}>
                   <Text style={styles.buttonText}>Mua ngay</Text>
                   <Image
-                    source={require('../../assets/muangay.png')}
+                    source={require('../../../assets/muangay.png')}
                     style={styles.icon}
                   />
                 </TouchableOpacity>
@@ -334,21 +356,25 @@ const TrangChuScreen = () => {
           <TouchableOpacity style={styles.buttonReview}>
             <Text style={styles.buttonText}>Đánh giá</Text>
             <Image
-              source={require('../../assets/Message.png')}
+              source={require('../../../assets/Message.png')}
               style={styles.icon}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonAddToCart}>
+          <TouchableOpacity
+            style={styles.buttonAddToCart}
+            onPress={() => addToCart(item.id)}>
             <Text style={styles.buttonText}>Thêm vào giỏ</Text>
             <Image
-              source={require('../../assets/themvaogio.png')}
+              source={require('../../../assets/themvaogio.png')}
               style={styles.icon}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonBuyNow}>
+          <TouchableOpacity
+            style={styles.buttonBuyNow}
+            onPress={() => handleBuyNow(item.id)}>
             <Text style={styles.buttonText}>Mua ngay</Text>
             <Image
-              source={require('../../assets/muangay.png')}
+              source={require('../../../assets/muangay.png')}
               style={styles.icon}
             />
           </TouchableOpacity>
@@ -388,14 +414,14 @@ const TrangChuScreen = () => {
         />
         <TouchableOpacity style={styles.searchButton} onPress={toggleSort}>
           <Image
-            source={require('../../assets/SapXep.png')}
+            source={require('../../../assets/SapXep.png')}
             style={styles.searchIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
         <TouchableOpacity style={styles.searchButton}>
           <Image
-            source={require('../../assets/BoLoc.png')}
+            source={require('../../../assets/BoLoc.png')}
             style={styles.searchIcon}
           />
         </TouchableOpacity>
@@ -476,6 +502,21 @@ const TrangChuScreen = () => {
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
+      {showNotification && (
+        <TouchableOpacity
+          onPress={() => {
+            setShowNotification(false);
+          }}
+          style={[
+            {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
+          ]}>
+          <NotificationCard
+            type={notificationType}
+            message={notificationMessage}
+            dateTime={new Date().toLocaleString()}
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
