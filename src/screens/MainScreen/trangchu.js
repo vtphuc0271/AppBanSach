@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
-import {useNavigation} from '@react-navigation/native';
+import { UserContext } from '../../context/UserContext';
+import { useNavigation } from '@react-navigation/native';
 
 const TrangChuScreen = () => {
   const navigation = useNavigation();
@@ -27,9 +27,11 @@ const TrangChuScreen = () => {
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const {user} = useContext(UserContext);
-  //console.log('day la user: ', user);
+  const { user } = useContext(UserContext);
   const [data, setData] = useState([]);
+  const [purchasedBooks, setPurchasedBooks] = useState([]);
+
+  console.log('day la user: ', user);
 
   const toggleFilter = () => {
     setFilterItem(!filterItem);
@@ -37,6 +39,50 @@ const TrangChuScreen = () => {
       setsortItem(!sortItem);
     }
   };
+
+  //ham danh gia
+  const canReviewBook = async (userId, bookId) => {
+    try {
+      const snapshot = await firestore()
+        .collection('DaMua')
+        .doc(userId)
+        .collection('SachDaMua')
+        .doc(bookId)
+        .get();
+      return snapshot.exists;
+    } catch (error) {
+      console.error('Error checking if book is purchased: ', error);
+      return false;
+    }
+  };
+
+  const renderReviewButton = (item) => {
+    const isPurchased = purchasedBooks.includes(item.id);
+    return (
+      <TouchableOpacity
+        style={styles.buttonReviewNow}
+        onPress={() => isPurchased ? navigation.navigate('RatingDoScreen', { bookId: item.id }) : alert('Bạn cần mua sách để đánh giá')}>
+        <Text style={styles.buttonText}>Đánh giá ngay</Text>
+        <Image source={require('../../assets/Message.png')} style={styles.icon} />
+      </TouchableOpacity>
+    );
+  };
+
+  useEffect(() => {
+    const checkPurchasedBooks = async () => {
+      const purchased = [];
+      for (const book of data) {
+        const isPurchased = await canReviewBook(user.uid, book.id);
+        if (isPurchased) {
+          purchased.push(book.id);
+        }
+      }
+      setPurchasedBooks(purchased);
+    };
+    checkPurchasedBooks();
+  }, [data]);
+
+  //ham danh gia
 
   const toggleSort = () => {
     setsortItem(!sortItem);
@@ -88,6 +134,9 @@ const TrangChuScreen = () => {
   useEffect(() => {
     sortData();
   }, [sortOption]);
+
+
+
 
   const getAuthorNameById = authorId => {
     const author = tacGia.find(a => a.id === authorId);
@@ -210,7 +259,7 @@ const TrangChuScreen = () => {
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
-    navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
+    navigation.navigate('PaymentScreen', { id_Sach: id_Sach });
   };
 
   const displayLimitedData = (data, limit) => {
@@ -221,63 +270,53 @@ const TrangChuScreen = () => {
     setExpandedItem(prevState => (prevState === itemId ? null : itemId));
   };
 
-  const renderStars = rating => {
+  const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
         <Image
           key={i}
           source={
-            i <= rating
-              ? require('../../assets/fullStar.png')
-              : require('../../assets/emptyStar.png')
+            i <= Math.floor(rating)
+              ? require('../../assets/fullStar.png') // Sao đầy
+              : i - 1 < rating
+                ? require('../../assets/halfStar.png') // Sao nửa
+                : require('../../assets/emptyStar.png') // Sao rỗng
           }
           style={styles.star}
-        />,
+        />
       );
     }
     return stars;
   };
 
-  const renderItem = ({item}) => (
-    <View
-      style={[
-        styles.itemContainer,
-        {backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6'},
-      ]}>
+  const renderItem = ({ item }) => (
+    <View style={[styles.itemContainer, { backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6' }]}>
       <TouchableOpacity onPress={() => toggleExpand(item.id)}>
         <View style={styles.row}>
-          <View style={[styles.imageContainer]}>
+          <View style={styles.imageContainer}>
             {item.anhSach ? (
-              <Image
-                source={{uri: item.anhSach}}
-                style={styles.categoryImage}
-              />
+              <Image source={{ uri: item.anhSach }} style={styles.categoryImage} />
             ) : (
-              <Image
-                source={require('../../assets/default.png')}
-                style={styles.categoryImage}
-              />
+              <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
             )}
           </View>
           <View style={styles.infoContainer}>
-            <View style={{marginLeft: 15, padding: 0}}>
-              <Text style={[styles.title, {maxWidth: 250, flexWrap: 'wrap'}]}>
-                {item.tenSach}
-              </Text>
-              <Text style={[styles.text, {maxWidth: 250, flexWrap: 'wrap'}]}>
-                {getAuthorNameById(item.tacGia)}
-              </Text>
+            <View style={{ marginLeft: 15, padding: 0 }}>
+              <Text style={[styles.title, { maxWidth: 250, flexWrap: 'wrap' }]}>{item.tenSach}</Text>
+              <Text style={[styles.text, { maxWidth: 250, flexWrap: 'wrap' }]}>{getAuthorNameById(item.tacGia)}</Text>
               <View style={styles.ratingContainer}>
-                <View style={styles.starContainer}>{renderStars(4)}</View>
-                <Text style={styles.votes}>({244} lượt đánh giá)</Text>
+                <View style={styles.starContainer}>{renderStars(item.soSaoTrungBinh)}</View>
+                <Text style={styles.votes}>
+                  ({item.soLuotDanhGia ? item.soLuotDanhGia : 0} lượt đánh giá)
+                </Text>
               </View>
               <Text style={styles.giaTien}>
                 {item.giaTien
                   ? new Intl.NumberFormat('vi-VN', {
-                      style: 'currency',
-                      currency: 'VND',
-                    }).format(item.giaTien)
+                    style: 'currency',
+                    currency: 'VND',
+                  }).format(item.giaTien)
                   : '0 VNĐ'}
               </Text>
             </View>
@@ -287,19 +326,13 @@ const TrangChuScreen = () => {
                   style={styles.buttonAddToCart}
                   onPress={() => addToCart(item.id)}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
-                  <Image
-                    source={require('../../assets/themvaogio.png')}
-                    style={styles.icon}
-                  />
+                  <Image source={require('../../assets/themvaogio.png')} style={styles.icon} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.buttonBuyNow}
                   onPress={() => handleBuyNow(item.id)}>
                   <Text style={styles.buttonText}>Mua ngay</Text>
-                  <Image
-                    source={require('../../assets/muangay.png')}
-                    style={styles.icon}
-                  />
+                  <Image source={require('../../assets/muangay.png')} style={styles.icon} />
                 </TouchableOpacity>
               </View>
             )}
@@ -310,9 +343,7 @@ const TrangChuScreen = () => {
       {expandedItem === item.id && (
         <>
           <View style={styles.divider} />
-          <TouchableOpacity
-            style={styles.detailsContainer}
-            onPress={() => toggleExpand(item.id)}>
+          <TouchableOpacity style={styles.detailsContainer} onPress={() => toggleExpand(item.id)}>
             <Text>Thể loại: {getTheLoaiNameById(item.theLoai)}</Text>
             <View style={styles.row}>
               <View style={styles.column}>
@@ -330,32 +361,31 @@ const TrangChuScreen = () => {
         </>
       )}
       {expandedItem === item.id && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.buttonReview}>
-            <Text style={styles.buttonText}>Đánh giá</Text>
-            <Image
-              source={require('../../assets/Message.png')}
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonAddToCart}>
-            <Text style={styles.buttonText}>Thêm vào giỏ</Text>
-            <Image
-              source={require('../../assets/themvaogio.png')}
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.buttonBuyNow}>
-            <Text style={styles.buttonText}>Mua ngay</Text>
-            <Image
-              source={require('../../assets/muangay.png')}
-              style={styles.icon}
-            />
-          </TouchableOpacity>
+        <View>
+          <View style={{ alignItems: 'center', paddingBottom: 10 }}>
+            {renderReviewButton(item)}
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.buttonReview}
+              onPress={() => navigation.navigate('RatingScreen', { bookId: item.id })}>
+              <Text style={styles.buttonText}>Xem Đánh giá</Text>
+              <Image source={require('../../assets/Message.png')} style={styles.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonAddToCart}>
+              <Text style={styles.buttonText}>Thêm giỏ</Text>
+              <Image source={require('../../assets/themvaogio.png')} style={styles.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttonBuyNow}>
+              <Text style={styles.buttonText}>Mua ngay</Text>
+              <Image source={require('../../assets/muangay.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
   );
+
 
   const renderSortOption = (option, label) => {
     return (
@@ -363,13 +393,13 @@ const TrangChuScreen = () => {
         style={[
           styles.sortOption,
           sortOption === option
-            ? {backgroundColor: '#4CAF50'}
-            : {backgroundColor: '#fff'}, // Bôi đen tùy chọn đã chọn
+            ? { backgroundColor: '#4CAF50' }
+            : { backgroundColor: '#fff' }, // Bôi đen tùy chọn đã chọn
         ]}
         onPress={() => handleSortOption(option)}
         disabled={sortOption === option} // Disable lựa chọn đã chọn
       >
-        <Text style={{color: sortOption === option ? '#fff' : '#000'}}>
+        <Text style={{ color: sortOption === option ? '#fff' : '#000' }}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -413,7 +443,7 @@ const TrangChuScreen = () => {
       {filterItem && (
         <ScrollView
           style={styles.filterContainer}
-          contentContainerStyle={{paddingBottom: 50}}>
+          contentContainerStyle={{ paddingBottom: 50 }}>
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
@@ -572,7 +602,7 @@ const styles = StyleSheet.create({
     width: 105,
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 15,
     elevation: 8,
@@ -609,6 +639,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   star: {
+    width: 20,
+    height: 20,
     fontSize: 14,
     marginRight: 2,
   },
@@ -631,6 +663,14 @@ const styles = StyleSheet.create({
     marginRight: 6,
     borderColor: '#B2B2B2',
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonBuyNow: {
     flexDirection: 'row',
@@ -641,6 +681,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: '#B2B2B2',
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonReview: {
     flexDirection: 'row',
@@ -651,6 +699,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: '#B2B2B2',
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonReviewNow: {
+    width: '40%',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: '#09750d',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 15,
+    alignItems: 'center',
+    borderColor: '#B2B2B2',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   searchRow: {
     flexDirection: 'row',
