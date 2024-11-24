@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import {
-  getDonHangData, approveOrder,GiveOrder,
+  getDonHangData, approveOrder, GiveOrder,
 } from '../../../src/services/orderService';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
@@ -9,61 +9,97 @@ import { useNavigation } from '@react-navigation/native';
 import { UserContext } from '../../context/UserContext';
 const OrderListScreen = () => {
   const [orders, setOrders] = useState([]);
+  const [ship, setShip] = useState([]);
+  const { user } = useContext(UserContext);
   const navigation = useNavigation();
-  
+
 
 
   useEffect(() => {
-    let unsubscribe;
+    let unsubscribeDonHang, unsubscribeShipperOrders;
 
     const fetchOrders = () => {
+      // Hàm lấy dữ liệu từ DonHangShiper bằng onSnapshot
+      const fetchShipperOrders = (callback) => {
+        try {
+          unsubscribeShipperOrders = firestore()
+            .collection('NguoiDung')
+            .doc(user.uid) // user.uid được lấy từ context hoặc user đăng nhập
+            .collection('DonHangShiper')
+            .onSnapshot(
+              snapshot => {
+                const shipperOrderIds = snapshot.docs.map(doc => doc.id);
+                callback(shipperOrderIds);
+              },
+              error => {
+                console.error('Lỗi khi lắng nghe DonHangShiper:', error);
+                callback([]);
+              }
+            );
+        } catch (error) {
+          console.error('Lỗi khi thiết lập onSnapshot DonHangShiper:', error);
+        }
+      };
 
-      // Gọi hàm getDonHangData từ orderlistservice
-      unsubscribe = getDonHangData(2,
-        donHangList => {
-          setOrders(donHangList);
-        },
-        error => {
-          setOrders([]);
-        },
-      );
+      // Lấy danh sách mã đơn hàng từ subcollection
+      fetchShipperOrders((shipperOrderIds) => {
+        unsubscribeDonHang = getDonHangData(
+          2, // Trạng thái cần lắng nghe
+          (donHangList) => {
+            // Loại bỏ đơn hàng có ID trùng với danh sách shipperOrderIds
+            const filteredOrders = donHangList.filter(order =>
+              shipperOrderIds.includes(order.id) // Lọc ngược
+            );
+            setOrders(filteredOrders);
+          },
+          (error) => {
+            console.error('Lỗi khi lắng nghe DonHangData:', error);
+            setOrders([]);
+          }
+        );
+      });
     };
-    setOrders([]);
+
+    setOrders([]); // Reset danh sách đơn hàng
     fetchOrders();
 
-    // Cleanup unsubscribe khi component unmount hoặc tab thay đổi
+    // Cleanup các onSnapshot khi component unmount
     return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (typeof unsubscribeDonHang === 'function') {
+        unsubscribeDonHang();
+      }
+      if (typeof unsubscribeShipperOrders === 'function') {
+        unsubscribeShipperOrders();
       }
     };
   }, []);
+
   console.log("orders", orders)
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'black' }}>Đơn hàng:</Text>
 
-      <View style={[styles.tach, {width: '60%'}]}>
+      <View style={[styles.tach, { width: '60%' }]}>
         <Text style={[styles.thongTin, { fontWeight: "bold" }]}>Mã ĐH: </Text>
         <Text style={styles.thongTin}>{item.id}</Text>
       </View>
 
-      <View style={[styles.tach, {width: '41%'}]}>
+      <View style={[styles.tach, { width: '41%' }]}>
         <Text style={[styles.thongTin, { fontWeight: "bold" }]}>Tên người nhận: </Text>
         <Text style={styles.thongTin}>{item.hoTen}</Text>
       </View>
 
-      <View style={[styles.tach, {width: '60%'}]}>
+      <View style={[styles.tach, { width: '60%' }]}>
         <Text style={[styles.thongTin, { fontWeight: "bold" }]}>Địa chỉ: </Text>
         <Text style={styles.thongTin}>{item.diaChi}</Text>
       </View>
 
-      <View style={[styles.tach, {width: '47%'}]}>
-        <Text style={[styles.thongTin, { fontWeight: "bold"}]}>Số điện thoại: </Text>
+      <View style={[styles.tach, { width: '47%' }]}>
+        <Text style={[styles.thongTin, { fontWeight: "bold" }]}>Số điện thoại: </Text>
         <Text style={styles.thongTin}>{item.soDienThoai}</Text>
       </View>
 
-      <View style={[styles.tach, {width: '90%'}]}>
+      <View style={[styles.tach, { width: '90%' }]}>
         <Text style={styles.totalText}>Tổng tiền ................. </Text>
         <Text style={[styles.totalText, { color: 'red' }]}>{item.tongTien} VNĐ</Text>
       </View>
@@ -75,6 +111,7 @@ const OrderListScreen = () => {
       <View style={styles.button}>
         <Text style={styles.buttonText}>Đã lấy đơn</Text>
       </View>
+
       <TouchableOpacity style={styles.buttonHD} onPress={() => approveOrder(item.id, 1)}>
         <Text style={styles.buttonText}>Hủy đơn</Text>
       </TouchableOpacity>
@@ -87,7 +124,7 @@ const OrderListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavbarCard ScreenName={'Đơn hàng cua toi'} iconShop={true} />
+      <NavbarCard ScreenName={'Đơn hàng của tôi'} iconShop={true} />
       {orders.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Bạn chưa nhận đơn hàng nào cả</Text>

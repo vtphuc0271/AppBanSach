@@ -11,7 +11,7 @@ const OrderListScreen = () => {
   const [orders, setOrders] = useState([]);
   const {user} = useContext(UserContext);
 
-  console.log('uid', user.uid);
+  console.log('uid', user);
 
   const addOrderToDonHangShiper = async (maDonHang) => {
     if (!user || !user.uid) {
@@ -33,38 +33,76 @@ const OrderListScreen = () => {
       // Thêm dữ liệu vào Firestore
       await donHangShiperRef.set(newOrderData);
   
-      console.log('Thêm đơn hàng thành công:', maDonHang);
+      console.log('Thêm đơn hàng thành công:', maDonHang, newOrderData);
     } catch (error) {
       console.error('Lỗi khi thêm đơn hàng vào DonHangShiper:', error);
     }
   };
 
   useEffect(() => {
-    let unsubscribe;
-
+    let unsubscribeDonHang, unsubscribeShipperOrders;
+  
     const fetchOrders = () => {
-
-      // Gọi hàm getDonHangData từ orderlistservice
-      unsubscribe = getDonHangData(1,
-        donHangList => {
-          setOrders(donHangList);
-        },
-        error => {
-          setOrders([]);
-        },
-      );
+      // Hàm lấy dữ liệu từ DonHangShiper bằng onSnapshot
+      const fetchShipperOrders = (callback) => {
+        try {
+          unsubscribeShipperOrders = firestore()
+            .collection('NguoiDung')
+            .doc(user.uid) // user.uid được lấy từ context hoặc user đăng nhập
+            .collection('DonHangShiper')
+            .onSnapshot(
+              snapshot => {
+                const shipperOrderIds = snapshot.docs.map(doc => doc.id);
+                callback(shipperOrderIds);
+              },
+              error => {
+                console.error('Lỗi khi lắng nghe DonHangShiper:', error);
+                callback([]);
+              }
+            );
+        } catch (error) {
+          console.error('Lỗi khi thiết lập onSnapshot DonHangShiper:', error);
+        }
+      };
+  
+      // Lấy danh sách mã đơn hàng từ subcollection
+      fetchShipperOrders((shipperOrderIds) => {
+        unsubscribeDonHang = getDonHangData(
+          2, // Trạng thái cần lắng nghe
+          (donHangList) => {
+            // Loại bỏ đơn hàng có ID trùng với danh sách shipperOrderIds
+            const filteredOrders = donHangList.filter(order =>
+              !shipperOrderIds.includes(order.id) // Lọc ngược
+            );
+            setOrders(filteredOrders);
+          },
+          (error) => {
+            console.error('Lỗi khi lắng nghe DonHangData:', error);
+            setOrders([]);
+          }
+        );
+      });
     };
-    setOrders([]);
+  
+    setOrders([]); // Reset danh sách đơn hàng
     fetchOrders();
-
-    // Cleanup unsubscribe khi component unmount hoặc tab thay đổi
+  
+    // Cleanup các onSnapshot khi component unmount
     return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (typeof unsubscribeDonHang === 'function') {
+        unsubscribeDonHang();
+      }
+      if (typeof unsubscribeShipperOrders === 'function') {
+        unsubscribeShipperOrders();
       }
     };
   }, []);
+  
+  
+  
+
   console.log("orders", orders)
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'black' }}>Đơn hàng:</Text>
@@ -94,11 +132,12 @@ const OrderListScreen = () => {
         <Text style={[styles.totalText, { color: 'red' }]}>{item.tongTien} VNĐ</Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => { addOrderToDonHangShiper(item.id) ; approveOrder(item.id, 2)}}>
+      <TouchableOpacity style={styles.button} onPress={() => { addOrderToDonHangShiper(item.id);}}>
         <Text style={styles.buttonText}>Nhận</Text>
       </TouchableOpacity>
     </View>
   );
+
 
   return (
     <View style={styles.container}>
