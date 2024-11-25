@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@codler/react-native-keyboard-aware-scroll-view": "^2.0.1",
     "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-native-community/checkbox": "^0.5.17",
     "@react-native-firebase/app": "^21.3.0",
@@ -21,8 +22,8 @@
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
     "g": "^2.0.1",
-    "npm": "^10.9.1",
     "lodash.debounce": "^4.0.8",
+    "npm": "^10.9.1",
     "react": "18.3.1",
     "react-native": "0.75.4",
     "react-native-dropdown-picker": "^5.4.6",

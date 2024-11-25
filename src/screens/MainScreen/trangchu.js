@@ -8,13 +8,13 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
-  Alert,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
-import {useNavigation} from '@react-navigation/native';
-import NotificationCard from '../../components/NotificationCard';
+import { UserContext } from '../../context/UserContext';
+import { useNavigation } from '@react-navigation/native';
+
+
 const TrangChuScreen = () => {
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
@@ -28,12 +28,7 @@ const TrangChuScreen = () => {
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const {user} = useContext(UserContext);
-
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationType, setNotificationType] = useState('');
-  const [notificationMessage, setNotificationMessage] = useState('');
-  //console.log('day la user: ', user);
+  const { user } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [purchasedBooks, setPurchasedBooks] = useState([]);
 
@@ -47,23 +42,32 @@ const TrangChuScreen = () => {
   };
 
   //ham danh gia
-  const canReviewBook = async (userId, bookId) => {
-    try {
-      const snapshot = await firestore()
+  const canReviewBook = (userId, bookId) => {
+    return new Promise((resolve, reject) => {
+      const unsubscribe = firestore()
         .collection('DaMua')
         .doc(userId)
         .collection('SachDaMua')
         .doc(bookId)
-        .get();
-      return snapshot.exists;
-    } catch (error) {
-      console.error('Error checking if book is purchased: ', error);
-      return false;
-    }
+        .get()  // Đổi .onSnapshot() thành .get() để lấy một lần dữ liệu thay vì lắng nghe liên tục
+        .then(snapshot => {
+          if (snapshot.exists) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        })
+        .catch(error => {
+          console.error('Error checking if book is purchased: ', error);
+          resolve(false);  // Trả về false nếu có lỗi
+        });
+  
+      return unsubscribe; // Clean up nếu cần thiết
+    });
   };
 
   const renderReviewButton = (item) => {
-    const isPurchased = purchasedBooks.includes(item.id);
+    const isPurchased = purchasedBooks.includes(item.id);  // Kiểm tra sách đã được mua chưa
     return (
       <TouchableOpacity
         style={styles.buttonReviewNow}
@@ -76,17 +80,24 @@ const TrangChuScreen = () => {
 
   useEffect(() => {
     const checkPurchasedBooks = async () => {
+      if (!user || !data || data.length === 0) return;
+  
       const purchased = [];
       for (const book of data) {
-        const isPurchased = await canReviewBook(user?.uid, book.id);
-        if (isPurchased) {
-          purchased.push(book.id);
+        try {
+          const isPurchased = await canReviewBook(user.uid, book.id);
+          if (isPurchased) {
+            purchased.push(book.id);
+          }
+        } catch (error) {
+          console.error("Error checking purchased book:", error);
         }
       }
-      setPurchasedBooks(purchased);
+      setPurchasedBooks(purchased);  // Cập nhật danh sách sách đã mua
     };
+  
     checkPurchasedBooks();
-  }, [data]);
+  }, [data, user]);
 
   //ham danh gia
 
@@ -229,60 +240,43 @@ const TrangChuScreen = () => {
     };
   }, []);
 
-  const addToCart = async (idSach,giaMua, soLuong = 1) => {
+  const addToCart = async (id_Sach, soLuong = 1) => {
+    if (!user?.uid) {
+      console.error('User chưa đăng nhập');
+      return;
+    }
+
     try {
-      if (!user?.uid) {
-        setNotificationType('error');
-        setNotificationMessage('Bạn cần đăng nhập để đặt hàng');
-        setShowNotification(true);
-        return;
-      }
-  
-      // Lấy reference tới collection 'Items' của người dùng trong giỏ hàng
-      const gioHangRef = firestore()
+      const cartItemRef = firestore()
         .collection('GioHang')
-        .doc(user.uid)
-        .collection('Items')
-        .doc(idSach); // Document cho từng sản phẩm
-  
-      // Kiểm tra nếu sản phẩm đã tồn tại trong giỏ hàng
-      const docSnapshot = await gioHangRef.get();
-  
-      if (!docSnapshot.exists) {
-        // Nếu sản phẩm chưa có trong giỏ, thêm mới với số lượng ban đầu
-        const initialData = {
-          soLuong: parseInt(soLuong),
-          giaMua: giaMua,
-        };
-        await gioHangRef.set(initialData);
-        console.log('Sản phẩm đã được thêm vào giỏ hàng.');
-      } else {
-        // Nếu sản phẩm đã tồn tại trong giỏ, cập nhật số lượng
-        const currentData = docSnapshot.data();
-        const newQuantity = currentData.soLuong + parseInt(soLuong);
-  
-        // Cập nhật lại số lượng sản phẩm trong giỏ
-        await gioHangRef.update({
-          soLuong: newQuantity,
+        .doc(`${user.uid}_${id_Sach}`); // Dùng id_NguoiDung và id_Sach làm Document ID
+
+      const cartItemSnapshot = await cartItemRef.get();
+
+      if (cartItemSnapshot.exists) {
+        // Nếu sản phẩm đã tồn tại, tăng số lượng lên
+        const currentSoLuong = parseInt(cartItemSnapshot.data().soLuong) || 0;
+        await cartItemRef.update({
+          soLuong: (currentSoLuong + soLuong).toString(),
         });
-        console.log('Số lượng sản phẩm đã được cập nhật.');
+      } else {
+        // Nếu sản phẩm chưa tồn tại, tạo mới với soLuong = 1
+        await cartItemRef.set({
+          id_NguoiDung: user.uid,
+          id_Sach,
+          soLuong: soLuong.toString(),
+        });
       }
+
+      console.log('Thêm vào giỏ hàng thành công');
     } catch (error) {
-      console.error('Lỗi khi thêm vào giỏ hàng:', error.message);
+      console.error('Lỗi khi thêm vào giỏ hàng: ', error);
     }
   };
-  
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
-    if (!user?.uid) {
-      setNotificationType('error');
-      setNotificationMessage('Bạn cần đăng nhập để đặt hàng');
-      setShowNotification(true);
-      return;
-    } else {
-      navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
-    }
+    navigation.navigate('PaymentScreen', { id_Sach: id_Sach });
   };
 
   const displayLimitedData = (data, limit) => {
@@ -321,10 +315,7 @@ const TrangChuScreen = () => {
             {item.anhSach ? (
               <Image source={{ uri: item.anhSach }} style={styles.categoryImage} />
             ) : (
-              <Image
-                source={require('../../assets/default.png')}
-                style={styles.categoryImage}
-              />
+              <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
             )}
           </View>
           <View style={styles.infoContainer}>
@@ -350,21 +341,15 @@ const TrangChuScreen = () => {
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={styles.buttonAddToCart}
-                  onPress={() => addToCart(item.id,item.giaTien)}>
+                  onPress={() => addToCart(item.id)}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
-                  <Image
-                    source={require('../../assets/themvaogio.png')}
-                    style={styles.icon}
-                  />
+                  <Image source={require('../../assets/themvaogio.png')} style={styles.icon} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.buttonBuyNow}
                   onPress={() => handleBuyNow(item.id)}>
                   <Text style={styles.buttonText}>Mua ngay</Text>
-                  <Image
-                    source={require('../../assets/muangay.png')}
-                    style={styles.icon}
-                  />
+                  <Image source={require('../../assets/muangay.png')} style={styles.icon} />
                 </TouchableOpacity>
               </View>
             )}
@@ -538,21 +523,6 @@ const TrangChuScreen = () => {
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
-      {showNotification && (
-        <TouchableOpacity
-          onPress={() => {
-            setShowNotification(false);
-          }}
-          style={[
-            {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
-          ]}>
-          <NotificationCard
-            type={notificationType}
-            message={notificationMessage}
-            dateTime={new Date().toLocaleString()}
-          />
-        </TouchableOpacity>
-      )}
     </View>
   );
 };

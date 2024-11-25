@@ -163,7 +163,7 @@ const ManagerUser = ({navigation}) => {
                     email,
                     hinh: imageUrl,
                     hoTen: ten,
-                    maVaiTro: '2',
+
                     soDienThoai: sdt,
                     createdAt: firestore.FieldValue.serverTimestamp(),
                 });

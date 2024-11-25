@@ -5,7 +5,7 @@ import NavbarCard from '../../components/NavbarCard';
 import { TextInput } from 'react-native-gesture-handler';
 import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
-
+import { KeyboardAwareScrollView } from '@codler/react-native-keyboard-aware-scroll-view';
 
 const RatingDoScreen = ({ route }) => {
     const { bookId } = route.params;
@@ -73,13 +73,13 @@ const RatingDoScreen = ({ route }) => {
             try {
                 const bookSnapshot = await firestore().collection('Sach').doc(bookId).get();
                 setBookDetails(bookSnapshot.data());
-    
+
                 const reviewsSnapshot = await firestore()
                     .collection('DanhGia')
                     .doc(bookId)
                     .collection('idNguoiDung')
                     .get();
-    
+
                 const reviewsList = await Promise.all(
                     reviewsSnapshot.docs.map(async (doc) => {
                         const review = doc.data();
@@ -92,7 +92,7 @@ const RatingDoScreen = ({ route }) => {
                     })
                 );
                 setReviews(reviewsList);
-    
+
                 // Kiểm tra nếu người dùng đã đánh giá
                 const userReviewSnapshot = await firestore()
                     .collection('DanhGia')
@@ -100,7 +100,7 @@ const RatingDoScreen = ({ route }) => {
                     .collection('idNguoiDung')
                     .doc(user.uid)
                     .get();
-    
+
                 if (userReviewSnapshot.exists) {
                     const userReview = userReviewSnapshot.data();
                     setRating(userReview.soSao); // Hiển thị số sao đã đánh giá
@@ -112,20 +112,20 @@ const RatingDoScreen = ({ route }) => {
         };
         fetchBookDetails();
     }, [bookId, user.uid]);
-    
+
 
     const handleSubmitRating = async () => {
         if (!rating) {
             alert("Vui lòng chọn số sao!");
             return;
         }
-    
+
         const reviewData = {
             noiDung: noiDung,
             ngayDanhGia: firestore.FieldValue.serverTimestamp(),
             soSao: rating,
         };
-    
+
         try {
             // Thêm hoặc cập nhật đánh giá của người dùng
             await firestore()
@@ -134,19 +134,19 @@ const RatingDoScreen = ({ route }) => {
                 .collection('idNguoiDung')
                 .doc(user.uid)
                 .set(reviewData);
-    
+
             // Truy xuất tất cả đánh giá của sách
             const reviewsSnapshot = await firestore()
                 .collection('DanhGia')
                 .doc(bookId)
                 .collection('idNguoiDung')
                 .get();
-    
+
             const totalReviews = reviewsSnapshot.size;
             const totalStars = reviewsSnapshot.docs.reduce((sum, doc) => sum + doc.data().soSao, 0);
-    
+
             const averageRating = totalStars / totalReviews;
-    
+
             // Cập nhật số sao trung bình vào collection 'Sach'
             await firestore()
                 .collection('Sach')
@@ -155,7 +155,7 @@ const RatingDoScreen = ({ route }) => {
                     soSaoTrungBinh: averageRating,
                     soLuotDanhGia: totalReviews,
                 });
-    
+
             alert("Đánh giá thành công!");
             setRating(0);
             setNoiDung('');
@@ -165,7 +165,7 @@ const RatingDoScreen = ({ route }) => {
             alert("Không thể lưu đánh giá!");
         }
     };
-    
+
 
 
     const calculateAverageRating = (reviews) => {
@@ -184,8 +184,8 @@ const RatingDoScreen = ({ route }) => {
                         i <= Math.floor(rating)
                             ? require('../../assets/fullStar.png') // Sao đầy
                             : i - 1 < rating
-                            ? require('../../assets/halfStar.png') // Sao nửa
-                            : require('../../assets/emptyStar.png') // Sao rỗng
+                                ? require('../../assets/halfStar.png') // Sao nửa
+                                : require('../../assets/emptyStar.png') // Sao rỗng
                     }
                     style={[styles.star, { width: size, height: size }]}
                 />
@@ -193,7 +193,7 @@ const RatingDoScreen = ({ route }) => {
         }
         return stars;
     };
-    
+
     const renderChoseStars = (rating, size) => {
         const stars = [];
         for (let i = 1; i <= 5; i++) {
@@ -211,8 +211,8 @@ const RatingDoScreen = ({ route }) => {
                             i <= Math.floor(rating)
                                 ? require('../../assets/fullStar.png') // Sao đầy
                                 : i - 0.5 === rating
-                                ? require('../../assets/halfStar.png') // Sao nửa
-                                : require('../../assets/emptyStar.png') // Sao rỗng
+                                    ? require('../../assets/halfStar.png') // Sao nửa
+                                    : require('../../assets/emptyStar.png') // Sao rỗng
                         }
                         style={{ width: size, height: size }}
                     />
@@ -233,54 +233,59 @@ const RatingDoScreen = ({ route }) => {
     }
 
     return (
-        <View style={styles.container2}>
-            <NavbarCard ScreenName={'Đánh giá'} iconShop={true} />
-            <View style={styles.container}>
-                <View style={styles.contentContainer}>
-                    <Image source={{ uri: bookDetails.anhSach }} style={styles.bookImage} />
-                    <View style={styles.bookDetails}>
-                        <Text style={styles.bookTitle}>{bookDetails.tenSach}</Text>
-                        <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
-                            <Text style={styles.bookAuthor}>{getAuthorNameById(bookDetails.tacGia)}</Text>
-                            <View style={{ width: 30 }}></View>
-                            <View style={styles.ratingContainer}>
-                                <View style={styles.starContainer}>{renderStars(calculateAverageRating(reviews), 20)}</View>
-                                <Text style={styles.reviewRating}>({calculateAverageRating(reviews)})</Text>
+        <KeyboardAwareScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+        >
+            <View style={styles.container2}>
+                <NavbarCard ScreenName={'Đánh giá'} iconShop={true} />
+                <View style={styles.container}>
+                    <View style={styles.contentContainer}>
+                        <Image source={{ uri: bookDetails.anhSach }} style={styles.bookImage} />
+                        <View style={styles.bookDetails}>
+                            <Text style={styles.bookTitle}>{bookDetails.tenSach}</Text>
+                            <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                                <Text style={styles.bookAuthor}>{getAuthorNameById(bookDetails.tacGia)}</Text>
+                                <View style={{ width: 30 }}></View>
+                                <View style={styles.ratingContainer}>
+                                    <View style={styles.starContainer}>{renderStars(calculateAverageRating(reviews), 20)}</View>
+                                    <Text style={styles.reviewRating}>({calculateAverageRating(reviews)})</Text>
+                                </View>
+
                             </View>
+                            <Text style={styles.votes}>({244} lượt đánh giá)</Text>
+                            <Text style={styles.bookPrice}>
+                                {bookDetails.giaTien
+                                    ? new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND',
+                                    }).format(bookDetails.giaTien)
+                                    : '0 VNĐ'}
+                            </Text>
 
                         </View>
-                        <Text style={styles.votes}>({244} lượt đánh giá)</Text>
-                        <Text style={styles.bookPrice}>
-                            {bookDetails.giaTien
-                                ? new Intl.NumberFormat('vi-VN', {
-                                    style: 'currency',
-                                    currency: 'VND',
-                                }).format(bookDetails.giaTien)
-                                : '0 VNĐ'}
-                        </Text>
-
                     </View>
-                </View>
-                <View style={{ height: 80, alignItems: 'center', borderBottomWidth: 2, justifyContent: 'center' }}>
-                    <View style={[styles.starContainer]}>
-                        {renderChoseStars(rating, 60)}
+                    <View style={{ height: 80, alignItems: 'center', borderBottomWidth: 2, justifyContent: 'center' }}>
+                        <View style={[styles.starContainer]}>
+                            {renderChoseStars(rating, 60)}
+                        </View>
                     </View>
+                    <Text style={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', paddingVertical: 10 }}>Bình luận:</Text>
+                    <TextInput
+                        style={styles.ratingText}
+                        multiline
+                        numberOfLines={13}
+                        placeholder="Nhập nội dung..."
+                        value={noiDung}
+                        onChangeText={setNoiDung}
+                    />
+                    <TouchableOpacity style={styles.btnRating} onPress={handleSubmitRating}>
+                        <Text style={{ fontSize: 18, color: '#fff', fontWeight: 'bold' }}>Đánh giá</Text>
+                    </TouchableOpacity>
                 </View>
-                <Text style={{ textAlign: 'left', fontSize: 18, fontWeight: 'bold', paddingVertical: 10 }}>Bình luận:</Text>
-                <TextInput
-                    style={styles.ratingText}
-                    multiline
-                    numberOfLines={13}
-                    placeholder="Nhập nội dung..."
-                    value={noiDung}
-                    onChangeText={setNoiDung}
-                />
-                <TouchableOpacity style={styles.btnRating} onPress={handleSubmitRating}>
-                    <Text style={{ fontSize: 18, color: '#fff', fontWeight: 'bold' }}>Đánh giá</Text>
-                </TouchableOpacity>
             </View>
-        </View>
-
+        </KeyboardAwareScrollView>
     );
 };
 

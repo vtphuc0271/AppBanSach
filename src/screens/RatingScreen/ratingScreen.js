@@ -69,8 +69,8 @@ const RatingScreen = ({ route }) => {
                         i <= Math.floor(rating)
                             ? require('../../assets/fullStar.png') // Sao đầy
                             : i - 1 < rating
-                            ? require('../../assets/halfStar.png') // Sao nửa
-                            : require('../../assets/emptyStar.png') // Sao rỗng
+                                ? require('../../assets/halfStar.png') // Sao nửa
+                                : require('../../assets/emptyStar.png') // Sao rỗng
                     }
                     style={styles.star}
                 />
@@ -83,7 +83,11 @@ const RatingScreen = ({ route }) => {
         <View style={styles.reviewItem}>
             <Text>{console.log("user danh gia ne", item.user)}</Text>
             <View style={styles.userInfo}>
-                <Image source={{ uri: item.user.hinh }} style={styles.userAvatar} />
+                {item.user.hinh ? (
+                    <Image source={{ uri: item.user.hinh }} style={styles.userAvatar} />
+                ) : (
+                    <Image source={require('../../assets/default.png')} style={styles.userAvatar} />
+                )}
                 <View>
                     <Text style={styles.userName}>{item.user.hoTen}</Text>
                     <View style={styles.ratingContainer}>
@@ -117,7 +121,12 @@ const RatingScreen = ({ route }) => {
             <NavbarCard ScreenName={'Đánh giá'} iconShop={true} />
             <View style={styles.container}>
                 <View style={styles.contentContainer}>
-                    <Image source={{ uri: bookDetails.anhSach }} style={styles.bookImage} />
+                    {bookDetails.anhSach ? (
+                        <Image source={{ uri: bookDetails.anhSach }} style={styles.bookImage} />
+                    ) : (
+                        <Image source={require('../../assets/default.png')} style={styles.bookImage} />
+                    )}
+
                     <View style={styles.bookDetails}>
                         <Text style={styles.bookTitle}>{bookDetails.tenSach}</Text>
                         <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
@@ -149,7 +158,7 @@ const RatingScreen = ({ route }) => {
                 />
             </View>
         </View>
-        
+
     );
 };
 
@@ -276,7 +285,7 @@ const styles = StyleSheet.create({
     bubbleContainer: {
         maxWidth: '100%', // Chiều rộng tối đa 90% màn hình
         paddingVertical: 10,
-        marginLeft: 40,
+        marginLeft: '15%',
         resizeMode: 'contain',
         borderWidth: 1,
         borderRadius: 15,
