@@ -14,9 +14,10 @@ import AdminDecentScreen from './src/screens/PhanquyenScreen/danhsachnguoidung.j
 import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
 import UserManagerScreen from './src/screens/UserManagerScreen/UserManager.js';
 import OrderListScreen from './src/screens/OrderListScreen/index.js';
-
 import RatingScreen from './src/screens/RatingScreen/ratingScreen.js';
 import RatingDoScreen from './src/screens/RatingDoScreen/ratingDoScreen.js';
+import LoadingScreen from './src/screens/LoadingScreen/LoadingScreen.js';
+import PushLanguagesToFirestore from './src/pushLanguagesToFirestore.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
           <Stack.Screen name="RatingScreen" component={RatingScreen} />
           <Stack.Screen name="RatingDoScreen" component={RatingDoScreen} />
           <Stack.Screen name="OrderListScreen" component={OrderListScreen} />
+          <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
