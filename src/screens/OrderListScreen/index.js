@@ -8,16 +8,17 @@ import {
   Modal,
   Image,
   ScrollView,
+  TextInput,
 } from 'react-native';
-import NavbarCard from '../../../components/NavbarCard';
+import NavbarCard from '../../components/NavbarCard';
 import {
   getDonHangData,
   confirmPayment,
   approveOrder,
   orderNotEnough,
-} from '../../../services/orderService';
+} from '../../services/orderService';
 import firestore from '@react-native-firebase/firestore';
-import {getBookById} from '../../../services/bookService';
+import {getBookById} from '../../services/bookService';
 
 // Các mục chính
 const TABS = [
@@ -36,6 +37,9 @@ const OrderListScreen = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [donHangShiperWithUsers, setDonHangShiperWithUsers] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [sortItem, setsortItem] = useState(null);
+  const [sortOption, setSortOption] = useState(null);
 
   console.log('orders', orders);
   //console.log('selectedOrder', selectedOrder);
@@ -43,6 +47,7 @@ const OrderListScreen = () => {
   //console.log('donHangShiperWithUsers', donHangShiperWithUsers);
   useEffect(() => {
     let unsubscribe;
+    setDonHangShiperWithUsers([]);
     if (selectedTab == 2) {
       unsubscribe = listenToDonHangShiperWithUsers();
     }
@@ -52,7 +57,7 @@ const OrderListScreen = () => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [selectedTab]);
 
   useEffect(() => {
     let unsubscribe;
@@ -82,9 +87,11 @@ const OrderListScreen = () => {
               );
               return {
                 ...order,
+                shipperid: shipperData?.parentId || '',
                 shipperName: shipperData?.userName || 'Chưa có Shiper nhận',
                 shipperPhone:
                   shipperData?.userPhone || 'Không có số điện thoại',
+                tinhTrangDonHangShiper: shipperData?.tinhTrangDonHangShiper,
               };
             });
 
@@ -121,6 +128,8 @@ const OrderListScreen = () => {
             ...doc.data(),
           }));
 
+          //console.log('donHangShiperData', donHangShiperData);
+
           const userIds = [
             ...new Set(donHangShiperData.map(item => item.parentId)),
           ];
@@ -150,13 +159,29 @@ const OrderListScreen = () => {
               userPhone: user.sdtShiper,
             };
           });
-
+          //console.log('combinedData', combinedData);
           setDonHangShiperWithUsers(combinedData); // Cập nhật state
         });
 
       return unsubscribe;
     } catch (error) {
       console.error('Lỗi khi lắng nghe dữ liệu:', error);
+    }
+  };
+
+  const approveOrderShipper = async (shipperId, orderId, orderStatus) => {
+    try {
+      await firestore()
+        .collection('NguoiDung') // Thay thế bằng tên collection của bạn
+        .doc(shipperId)
+        .collection('DonHangShiper') // Thay thế bằng tên collection của bạn
+        .doc(orderId)
+        .update({
+          tinhTrangDonHangShiper: orderStatus, // Cập nhật trạng thái đơn hàng
+        });
+      console.log('update tinhTrangDonHangShiper thành công!');
+    } catch (error) {
+      console.error('Lỗi khi update tinhTrangDonHangShiper:', error);
     }
   };
 
@@ -207,6 +232,120 @@ const OrderListScreen = () => {
     }
     return '';
   };
+
+  const toggleSort = () => {
+    setsortItem(!sortItem);
+  };
+
+  const renderSortOption = (option, label) => {
+    return (
+      <TouchableOpacity
+        style={[
+          styles.sortOption,
+          sortOption === option
+            ? {backgroundColor: '#4CAF50'}
+            : {backgroundColor: '#fff'}, // Bôi đen tùy chọn đã chọn
+        ]}
+        onPress={() => handleSortOption(option)}
+        disabled={sortOption === option} // Disable lựa chọn đã chọn
+      >
+        <Text style={{color: sortOption === option ? '#fff' : '#000'}}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const handleSortOption = option => {
+    if (sortOption === option) return;
+    setSortOption(option);
+    sortedOrders();
+  };
+
+  const sortedOrders = () => {
+    const sortedData = [...orders];
+
+    if (!sortOption) return;
+
+    switch (sortOption) {
+      case 'dateAsc': // Sắp xếp theo ngày tạo đơn từ cũ nhất
+        sortedData.sort((a, b) => a.ngayTao - b.ngayTao);
+        break;
+
+      case 'qrNotConfirmed': // Sắp xếp theo đơn hàng chưa xác nhận QR
+        sortedData.sort((a, b) => {
+          const aIsQRNotConfirmed =
+            a.phuongThucThanhToan === 'QR' && a.tinhTrangThanhToan === 0;
+          const bIsQRNotConfirmed =
+            b.phuongThucThanhToan === 'QR' && b.tinhTrangThanhToan === 0;
+
+          // Đưa đơn chưa xác nhận QR lên đầu
+          return bIsQRNotConfirmed - aIsQRNotConfirmed;
+        });
+        break;
+
+      case 'qrConfirmed': // Sắp xếp theo đơn hàng đã xác nhận QR
+        sortedData.sort((a, b) => {
+          const aIsQRNotConfirmed =
+            a.phuongThucThanhToan === 'QR' && a.tinhTrangThanhToan === 1;
+          const bIsQRNotConfirmed =
+            b.phuongThucThanhToan === 'QR' && b.tinhTrangThanhToan === 1;
+
+          // Đưa đơn chưa xác nhận QR lên đầu
+          return bIsQRNotConfirmed - aIsQRNotConfirmed;
+        });
+        break;
+
+      case 'cod': // Sắp xếp theo phương thức thanh toán COD
+        sortedData.sort((a, b) => (a.phuongThucThanhToan === 'cod' ? -1 : 1));
+        break;
+
+      case 'waitingForStock': // Sắp xếp theo tình trạng người dùng chờ đủ hàng (notEnough)
+        sortedData.sort((a, b) => {
+          const aIsQRNotConfirmed = a.notEnough === 1;
+          const bIsQRNotConfirmed = b.phuongThucThanhToan === 1;
+
+          // Đưa đơn chưa xác nhận QR lên đầu
+          return bIsQRNotConfirmed - aIsQRNotConfirmed;
+        });
+        break;
+
+      case 'shipperNotPicked': // Sắp xếp theo Shipper chưa nhận
+        sortedData.sort((a, b) => {
+          const aShipperNotPicked = a.tinhTrangDonHangShiper === undefined;
+          const bShipperNotPicked = b.tinhTrangDonHangShiper === undefined;
+          return bShipperNotPicked - aShipperNotPicked;
+        });
+        break;
+
+      case 'shipperNotBring':
+        sortedData.sort((a, b) => {
+          const aShipperNotPicked = a.tinhTrangDonHangShiper === 0;
+          const bShipperNotPicked = b.tinhTrangDonHangShiper === 0;
+          return bShipperNotPicked - aShipperNotPicked;
+        });
+        break;
+
+      case 'shipperOnTheWay': // Sắp xếp theo Shipper đang giao
+        sortedData.sort((a, b) => {
+          const aShipperNotPicked = a.tinhTrangDonHangShiper === 2;
+          const bShipperNotPicked = b.tinhTrangDonHangShiper === 2;
+          return bShipperNotPicked - aShipperNotPicked;
+        });
+        break;
+      default:
+        break;
+    }
+    setOrders(sortedData);
+  };
+
+  const filteredOrders = orders.filter(order =>
+    order.id.toLowerCase().includes(searchText.toLowerCase()) // Tìm kiếm không phân biệt chữ hoa chữ thường
+  );
+
+  useEffect(() => {
+    sortedOrders();
+  }, [sortOption]);
 
   const renderOrder = ({item}) => (
     <TouchableOpacity
@@ -259,13 +398,24 @@ const OrderListScreen = () => {
           </View>
         </View>
       ) : null}
-      <View style={styles.row}>
-        <Text style={styles.title}>Tên Shiper: </Text>
-        <View style={styles.lineContainer}>
-          <Text style={styles.line}></Text>
-          <Text style={styles.content}>{item.shipperName}</Text>
-        </View>
-      </View>
+      {item.shipperName && (
+        <>
+          <View style={styles.row}>
+            <Text style={styles.title}>Tên Shiper: </Text>
+            <View style={styles.lineContainer}>
+              <Text style={styles.line}></Text>
+              <Text style={styles.content}>{item.shipperName}</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.title}>SĐT Shiper: </Text>
+            <View style={styles.lineContainer}>
+              <Text style={styles.line}></Text>
+              <Text style={styles.content}>{item.shipperPhone}</Text>
+            </View>
+          </View>
+        </>
+      )}
 
       <View style={styles.actions}>
         {selectedTab === 0 && (
@@ -276,7 +426,11 @@ const OrderListScreen = () => {
                 styles.notEnough,
                 item.notEnough !== 0 && styles.disabledButton,
               ]}
-              disabled={item.notEnough !== 0}
+              disabled={
+                item.notEnough !== 0 ||
+                (item.phuongThucThanhToan === 'QR' &&
+                  item.tinhTrangThanhToan === 0)
+              }
               onPress={() => orderNotEnough(item.id, 1)}>
               <Text style={styles.buttonText}>
                 {(item.notEnough === 0 && 'Không đủ hàng') ||
@@ -329,9 +483,20 @@ const OrderListScreen = () => {
         )}
         {selectedTab === 2 && (
           <TouchableOpacity
-            style={[styles.button, styles.complete]}
-            onPress={() => approveOrder(item.id, 3)}>
-            <Text style={styles.buttonText}>Xong</Text>
+            style={[
+              styles.button,
+              styles.complete,
+              item.tinhTrangDonHangShiper !== 0 && styles.disabledButton,
+            ]}
+            disabled={item.tinhTrangDonHangShiper !== 0}
+            onPress={() => approveOrderShipper(item.shipperid, item.id, 1)}>
+            <Text style={styles.buttonText}>
+              {item.tinhTrangDonHangShiper === undefined
+                ? 'Chưa có shipper nhận'
+                : item.tinhTrangDonHangShiper === 0
+                ? 'Giao cho shipper'
+                : 'Shipper đang giao'}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -362,8 +527,49 @@ const OrderListScreen = () => {
           </TouchableOpacity>
         ))}
       </View>
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm kiếm..."
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={toggleSort}>
+          <Image
+            source={require('../../assets/SapXep.png')}
+            style={styles.searchIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
+      {sortItem && (
+        <View style={styles.sortOptionsContainer}>
+          {selectedTab === 0 && (
+            <>
+              {renderSortOption('dateAsc', 'Ngày tạo đơn')}
+              {renderSortOption('qrNotConfirmed', 'Chưa xác nhận QR')}
+              {renderSortOption('qrConfirmed', 'QR')}
+              {renderSortOption('cod', 'COD')}
+              {renderSortOption('waitingForStock', 'Người dùng chờ đủ hàng')}
+            </>
+          )}
+
+          {selectedTab === 1 && (
+            <>{renderSortOption('dateAsc', 'Ngày tạo đơn')}</>
+          )}
+
+          {selectedTab === 2 && (
+            <>
+              {renderSortOption('shipperNotPicked', 'Shipper chưa nhận')}
+              {renderSortOption('shipperNotBring', 'Shipper chưa lấy hàng')}
+              {renderSortOption('shipperOnTheWay', 'Shipper đang giao')}
+            </>
+          )}
+        </View>
+      )}
+
       <FlatList
-        data={orders}
+        data={filteredOrders}
         keyExtractor={item => item.id}
         renderItem={renderOrder}
         ListEmptyComponent={
@@ -468,78 +674,30 @@ const OrderListScreen = () => {
                       </Text>
                     </View>
                   </View>
-                </ScrollView>
-
-                <View style={styles.actions}>
-                  {selectedTab === 0 && (
+                  {selectedOrder.shipperName && (
                     <>
-                      <TouchableOpacity
-                        style={[
-                          styles.button,
-                          styles.notEnough,
-                          selectedOrder.notEnough !== 0 &&
-                            styles.disabledButton,
-                        ]}
-                        disabled={selectedOrder.notEnough !== 0}
-                        onPress={() => orderNotEnough(selectedOrder.id, 1)}>
-                        <Text style={styles.buttonText}>
-                          {(selectedOrder.notEnough === 0 && 'Không đủ hàng') ||
-                            (selectedOrder.notEnough === 1 && 'Chờ xác nhận') ||
-                            (selectedOrder.notEnough === 2 && 'Chờ đủ hàng')}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.button,
-                          styles.approve,
-                          selectedOrder.notEnough === 1 &&
-                            styles.disabledButton,
-                        ]}
-                        onPress={() => {
-                          if (
-                            selectedOrder.phuongThucThanhToan === 'QR' &&
-                            selectedOrder.tinhTrangThanhToan === 0
-                          ) {
-                            confirmPayment(selectedOrder.id);
-                          } else {
-                            approveOrder(selectedOrder.id, 1);
-                          }
-                        }}
-                        disabled={selectedOrder.notEnough === 1}>
-                        <Text style={styles.buttonText}>
-                          {selectedOrder.phuongThucThanhToan === 'QR' &&
-                          selectedOrder.tinhTrangThanhToan === 0
-                            ? 'Duyệt thanh toán'
-                            : 'Duyệt đơn'}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[styles.button, styles.cancel]}
-                        onPress={() => {
-                          approveOrder(selectedOrder.id, 4);
-                        }}>
-                        <Text style={styles.buttonText}>Hủy đơn</Text>
-                      </TouchableOpacity>
+                      <View style={styles.row}>
+                        <Text style={styles.title}>Tên Shiper: </Text>
+                        <View style={styles.lineContainer}>
+                          <Text style={styles.line}></Text>
+                          <Text style={styles.content}>
+                            {selectedOrder.shipperName}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.row}>
+                        <Text style={styles.title}>SĐT Shiper: </Text>
+                        <View style={styles.lineContainer}>
+                          <Text style={styles.line}></Text>
+                          <Text style={styles.content}>
+                            {selectedOrder.shipperPhone}
+                          </Text>
+                        </View>
+                      </View>
                     </>
                   )}
+                </ScrollView>
 
-                  {selectedTab === 1 && (
-                    <TouchableOpacity
-                      style={[styles.button, styles.approve]}
-                      onPress={() => approveOrder(selectedOrder.id, 2)}>
-                      <Text style={styles.buttonText}>Giao</Text>
-                    </TouchableOpacity>
-                  )}
-                  {selectedTab === 2 && (
-                    <TouchableOpacity
-                      style={[styles.button, styles.complete]}
-                      onPress={() => approveOrder(selectedOrder.id, 3)}>
-                      <Text style={styles.buttonText}>Xong</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
                 <Text style={[styles.modalTitle, {marginTop: 10}]}>
                   Chi tiết đơn hàng:
                 </Text>
@@ -569,7 +727,7 @@ const OrderListScreen = () => {
               onPress={() => setIsModalVisible(false)}
               style={styles.closeButton}>
               <Image
-                source={require('../../../assets/closeqr.png')}
+                source={require('../../assets/closeqr.png')}
                 resizeMode="contain"
               />
             </TouchableOpacity>
@@ -583,6 +741,52 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  sortOption: {
+    paddingVertical: 3,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    margin: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sortOptionsContainer: {
+    width: 230,
+    backgroundColor: '#BACA77',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 20,
+    left: 120,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    marginVertical: 10,
+    marginHorizontal: 15,
+    backgroundColor: '#fff',
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 5,
+  },
+  searchButton: {
+    height: 45,
+    width: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    borderRadius: 5,
+  },
+  searchIcon: {
+    width: 30,
+    height: 30,
   },
   cartItem: {
     flexDirection: 'row', // Hiển thị các thành phần trong dòng

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
 import { launchImageLibrary } from 'react-native-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import NavbarCard from '../../../components/NavbarCard';
+import NavbarCard from '../../components/NavbarCard';
+import { UserContext } from '../../context/UserContext';
 
-const BookManagement = () => {
+const BookManagement = ({navigation}) => {
   const [Sach, setBooks] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,6 +32,23 @@ const BookManagement = () => {
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
+  const {user} = useContext(UserContext);
+  useEffect(() => {
+    if (user?.maVaiTro && user.maVaiTro !== '1') {
+      // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+      Alert.alert(
+        "Quyền hạn thay đổi",
+        "Bạn không có quyền truy cập vào màn hình này.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate('LoginScreen')
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [user, navigation]);
   useEffect(() => {
     // Lấy dữ liệu sách
     const unsubscribeBooks = firestore().collection('Sach').onSnapshot(
@@ -335,7 +353,7 @@ const BookManagement = () => {
                 {book.anhSach ? (
                   <Image source={{ uri: book.anhSach }} style={styles.categoryImage} />
                 ) : (
-                  <Image source={require('../../../assets/default.png')} style={styles.categoryImage} />
+                  <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
                 )}
               </View>
               <Text style={[styles.categoryName, { flex: 1.8 }]}>{book.tenSach}</Text>
@@ -350,10 +368,10 @@ const BookManagement = () => {
                     setModalVisible(true);
                   }}
                 >
-                  <Image source={require('../../../assets/edit.png')} />
+                  <Image source={require('../../assets/edit.png')} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(book.id)}>
-                  <Image source={require('../../../assets/delete.png')} />
+                  <Image source={require('../../assets/delete.png')} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -387,7 +405,7 @@ const BookManagement = () => {
                           {newAuthorImage ? (
                             <Image source={{ uri: newAuthorImage }} style={styles.imagePreview} />
                           ) : (
-                            <Image source={require('../../../assets/default.png')} style={styles.imagePreview} />
+                            <Image source={require('../../assets/default.png')} style={styles.imagePreview} />
                           )}
                         </TouchableOpacity>
                       </View>
@@ -440,7 +458,7 @@ const BookManagement = () => {
                     {newBook.anhSach ? (
                       <Image source={{ uri: newBook.anhSach }} style={{ width: 100, height: 100, margin: 10 }} />
                     ) : (
-                      <Image source={require('../../../assets/default.png')} style={{ width: 100, height: 100, margin: 10 }} />
+                      <Image source={require('../../assets/default.png')} style={{ width: 100, height: 100, margin: 10 }} />
                     )}
                   </TouchableOpacity>
                 </View>

@@ -9,16 +9,16 @@ import {
   TextInput,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import NavbarCard from '../../../components/NavbarCard';
-import {UserContext} from '../../../context/UserContext';
+import NavbarCard from '../../components/NavbarCard';
+import {UserContext} from '../../context/UserContext';
 import {useNavigation} from '@react-navigation/native';
 import {
   getUserCart,
   updateCartQuantity,
   removeCartItem,
-} from '../../../services/cartService';
-import {getBookById} from '../../../services/bookService';
-import {getAllAuthors} from '../../../services/authorService';
+} from '../../services/cartService';
+import {getBookById} from '../../services/bookService';
+import {getAllAuthors} from '../../services/authorService';
 
 const CartScreen = () => {
   const {user} = useContext(UserContext);

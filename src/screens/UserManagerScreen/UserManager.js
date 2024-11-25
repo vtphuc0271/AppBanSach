@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal, LayoutAnimation, Platform, UIManager } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import firebase from '@react-native-firebase/app';
 import { launchImageLibrary } from 'react-native-image-picker';
-import NavbarCard from '../../../components/NavbarCard';
-import NotificationCard from '../../../components/NotificationCard';
-
-
-const ManagerUser = () => {
+import NavbarCard from '../../components/NavbarCard';
+import NotificationCard from '../../components/NotificationCard';
+import { UserContext } from '../../context/UserContext';
+const ManagerUser = ({navigation}) => {
     const [nguoiDung, setNguoiDung] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [image, setImage] = useState('');
@@ -26,7 +25,7 @@ const ManagerUser = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editUserId, setEditUserId] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
-
+    const {user} = useContext(UserContext);
     const [newSpaceUser, setNewSpaceUser] = useState({
         hinh: '',
         hoTen: '',
@@ -82,6 +81,23 @@ const ManagerUser = () => {
     };
 
 
+
+    useEffect(() => {
+        if (user?.maVaiTro && user.maVaiTro !== '1') {
+            // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+            Alert.alert(
+                "Quyền hạn thay đổi",
+                "Bạn không có quyền truy cập vào màn hình này.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => navigation.navigate('LoginScreen')
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }, [user, navigation]);
     //Lay thong tin tren firebase xuong
     useEffect(() => {
         const unsubscribeNguoiDung = firestore().collection('NguoiDung').onSnapshot(
@@ -347,7 +363,7 @@ const ManagerUser = () => {
                         placeholder="Tìm kiếm...."
                     />
                     <TouchableOpacity>
-                        <Image style={styles.searchIcon} source={require('../../../assets/search.png')} />
+                        <Image style={styles.searchIcon} source={require('../../assets/search.png')} />
                     </TouchableOpacity>
                 </View>
 
@@ -359,7 +375,7 @@ const ManagerUser = () => {
                                     <Image source={{ uri: nguoi.hinh }} style={styles.anh} />
                                     
                                 ) : (
-                                    <Image source={require('../../../assets/default.png')} style={styles.anh} />
+                                    <Image source={require('../../assets/default.png')} style={styles.anh} />
                                 )}
                                 <View style={styles.thongTin}>
                                     <Text style={styles.thongtin1}>Tên: {nguoi.hoTen}</Text>
@@ -369,15 +385,15 @@ const ManagerUser = () => {
                                     {expandedUserId === nguoi.id && (
                                         <View style={styles.expandedDetails}>
                                             <TouchableOpacity style={styles.buttonGreen}>
-                                                <Image style={styles.icon1} source={require('../../../assets/XemDH.png')} />
+                                                <Image style={styles.icon1} source={require('../../assets/XemDH.png')} />
                                                 <Text style={styles.buttonText}>Xem đơn hàng</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity style={styles.buttonGray} onPress={() => handleEditUser(nguoi)}>
-                                                <Image style={styles.icon1} source={require('../../../assets/SuaTT.png')} />
+                                                <Image style={styles.icon1} source={require('../../assets/SuaTT.png')} />
                                                 <Text style={styles.buttonText}>Sửa thông tin</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity style={styles.buttonRed} onPress={() => handleBlock(nguoi)}>
-                                                <Image style={styles.icon1} source={require('../../../assets/ChanTK.png')} />
+                                                <Image style={styles.icon1} source={require('../../assets/ChanTK.png')} />
                                                 <Text style={styles.buttonText}>Chặn tài khoản</Text>
                                             </TouchableOpacity>
                                         </View>
@@ -389,7 +405,7 @@ const ManagerUser = () => {
                 </ScrollView>
 
                 <TouchableOpacity onPress={toggleAdd}>
-                    <Image style={styles.icon2} source={require('../../../assets/ThemND.png')} />
+                    <Image style={styles.icon2} source={require('../../assets/ThemND.png')} />
                 </TouchableOpacity>
             </View>
 
@@ -407,7 +423,7 @@ const ManagerUser = () => {
 
                         <TouchableOpacity onPress={openImagePicker}>
                             <Image
-                                source={selectedImage ? { uri: selectedImage } : require('../../../assets/ronadol.png')}
+                                source={selectedImage ? { uri: selectedImage } : require('../../assets/ronadol.png')}
                                 style={styles.imagePlaceholder}
                             />
                         </TouchableOpacity>

@@ -1,8 +1,9 @@
 import React, { useEffect,useState,useContext } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import NavbarCard from '../../../components/NavbarCard';
-import { UserContext } from '../../../context/UserContext';
+import NavbarCard from '../../components/NavbarCard';
+import { UserContext } from '../../context/UserContext';
+import { Alert } from 'react-native';
 
 const UserListScreen = ({navigation}) => {
     const [users, setUsers] = useState([]);
@@ -12,10 +13,21 @@ const UserListScreen = ({navigation}) => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const {user} = useContext(UserContext);
+
     useEffect(() => {
         if (user?.maVaiTro && user.maVaiTro !== '1') {
-            // Nếu vai trò khác "1", điều hướng về MainScreen
-            navigation.navigate('MainScreen');
+            // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+            Alert.alert(
+                "Quyền hạn thay đổi",
+                "Bạn không có quyền truy cập vào màn hình này.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => navigation.navigate('LoginScreen')
+                    }
+                ],
+                { cancelable: false }
+            );
         }
     }, [user, navigation]);
 
@@ -52,7 +64,7 @@ const UserListScreen = ({navigation}) => {
             case '4':
                 return 'Shipper';
             default:
-                return 'Vai trò không xác định';
+                return 'Người dùng bị chặn';
         }
     };
 
@@ -97,7 +109,7 @@ const UserListScreen = ({navigation}) => {
                 <View style={styles.iconContainer}>
                     <TouchableOpacity onPress={() => openModal(item.id, item.maVaiTro)}>
                         <Image
-                            source={require('../../../assets/iconmenuquantri.png')}
+                            source={require('../../assets/iconmenuquantri.png')}
                             style={styles.iconmenuquantri}
                         />
                     </TouchableOpacity>
@@ -118,7 +130,7 @@ const UserListScreen = ({navigation}) => {
                 />
                 <TouchableOpacity>
                     <Image
-                        source={require('../../../assets/iconsearch.png')}
+                        source={require('../../assets/iconsearch.png')}
                         style={styles.searchIcon}
                     />
                 </TouchableOpacity>

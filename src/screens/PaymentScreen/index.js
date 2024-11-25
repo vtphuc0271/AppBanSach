@@ -11,12 +11,12 @@ import {
   AppState,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
-import NavbarCard from '../../../components/NavbarCard';
-import {UserContext} from '../../../context/UserContext';
-import {getUserCart} from '../../../services/cartService';
-import {getBookById} from '../../../services/bookService';
+import NavbarCard from '../../components/NavbarCard';
+import {UserContext} from '../../context/UserContext';
+import {getUserCart} from '../../services/cartService';
+import {getBookById} from '../../services/bookService';
 import firestore from '@react-native-firebase/firestore';
-import NotificationCard from '../../../components/NotificationCard';
+import NotificationCard from '../../components/NotificationCard';
 import {useNavigation} from '@react-navigation/native';
 
 const PaymentScreen = ({route}) => {
@@ -468,7 +468,7 @@ const PaymentScreen = ({route}) => {
           <View style={styles.modalContent}>
             <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
               <Image
-                source={require('../../../assets/closeqr.png')}
+                source={require('../../assets/closeqr.png')}
                 resizeMode="contain"
               />
             </TouchableOpacity>

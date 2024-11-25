@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
-import {launchImageLibrary} from 'react-native-image-picker';
-import NavbarCard from '../../../components/NavbarCard';
-const CategoryList = () => {
+import { launchImageLibrary } from 'react-native-image-picker';
+import NavbarCard from '../../components/NavbarCard';
+import { UserContext } from '../../context/UserContext';
+
+const CategoryList = ({ navigation }) => {
   const [categories, setCategories] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,6 +24,25 @@ const CategoryList = () => {
   const [newPublisherImage, setNewPublisherImage] = useState('');
   const [editPublisherId, setEditPublisherId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const { user } = useContext(UserContext);
+
+
+  useEffect(() => {
+    if (user?.maVaiTro && user.maVaiTro !== '1') {
+      // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+      Alert.alert(
+        "Quyền hạn thay đổi",
+        "Bạn không có quyền truy cập vào màn hình này.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate('LoginScreen')
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [user, navigation]);
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -47,7 +68,7 @@ const CategoryList = () => {
       await firestore()
         .collection('NhaXuatBan')
         .doc(id)
-        .update({displayed: !publisher.displayed});
+        .update({ displayed: !publisher.displayed });
     }
   };
 
@@ -76,7 +97,7 @@ const CategoryList = () => {
       await firestore()
         .collection('NhaXuatBan')
         .doc(editPublisherId)
-        .update({name: newPublisherName, image: newPublisherImage})
+        .update({ name: newPublisherName, image: newPublisherImage })
         .then(() => {
           console.log('Publisher updated!');
         })
@@ -149,8 +170,8 @@ const CategoryList = () => {
   return (
     <View style={styles.container}>
       <NavbarCard ScreenName={'Nhà xuất bản'}
-       iconShop={true}>
-       </NavbarCard>
+        iconShop={true}>
+      </NavbarCard>
       <View style={styles.container2}>
         <View style={styles.header}>
           <View style={styles.actionButtons}>
@@ -174,36 +195,36 @@ const CategoryList = () => {
               onChangeText={setSearchText}
             />
             <Image
-                source={require('../../../assets/iconsearch.png')}
+                source={require('../../assets/iconsearch.png')}
                 style={styles.searchIcon}
               />
           </View>
         </View>
         <View style={styles.listHeader}>
-          <Text style={[styles.headerItem, {flex: 1.3}]}>STT</Text>
-          <Text style={[styles.headerItem, {flex: 1.1}]}>Ảnh</Text>
-          <Text style={[styles.headerItem, {flex: 3}]}>Tên nhà xuất bản</Text>
-          <Text style={[styles.headerItem, {flex: 2}]}>Thao tác</Text>
+          <Text style={[styles.headerItem, { flex: 1.3 }]}>STT</Text>
+          <Text style={[styles.headerItem, { flex: 1.1 }]}>Ảnh</Text>
+          <Text style={[styles.headerItem, { flex: 3 }]}>Tên nhà xuất bản</Text>
+          <Text style={[styles.headerItem, { flex: 2 }]}>Thao tác</Text>
         </View>
         <ScrollView>
           {filteredCategories.map((category, index) => (
             <View key={category.id} style={styles.categoryRow}>
-              <Text style={[styles.categoryId, {flex: 0}]}>{index + 1}</Text>
-              <View style={[styles.imageContainer, {flex: 1}]}>
+              <Text style={[styles.categoryId, { flex: 0 }]}>{index + 1}</Text>
+              <View style={[styles.imageContainer, { flex: 1 }]}>
                 <Image
-                  source={{uri: category.image}}
+                  source={{ uri: category.image }}
                   style={styles.categoryImage}
                 />
               </View>
-              <Text style={[styles.categoryName, {flex: 3}]}>
+              <Text style={[styles.categoryName, { flex: 3 }]}>
                 {category.name}
               </Text>
-              <View style={[styles.actionIcons, {flex: 2}]}>
+              <View style={[styles.actionIcons, { flex: 2 }]}>
                 <TouchableOpacity onPress={() => handleEdit(category.id)}>
-                  <Image source={require('../../../assets/edit.png')} />
+                  <Image source={require('../../assets/edit.png')} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(category.id)}>
-                  <Image source={require('../../../assets/delete.png')} />
+                  <Image source={require('../../assets/delete.png')} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -245,25 +266,25 @@ const CategoryList = () => {
                 onPress={selectImage}>
                 {newPublisherImage ? (
                   <Image
-                    source={{uri: newPublisherImage}}
-                    style={{width: 100, height: 100, margin: 10}}
+                    source={{ uri: newPublisherImage }}
+                    style={{ width: 100, height: 100, margin: 10 }}
                   />
                 ) : (
                   <Image
-                    source={require('../../../assets/default.png')}
+                    source={require('../../assets/default.png')}
                     style={{width: 100, height: 100, margin: 10}}
                   />
                 )}
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, {backgroundColor: 'green'}]}
+                style={[styles.button, { backgroundColor: 'green' }]}
                 onPress={handleAddNew}>
                 <Text style={styles.buttonText}>
                   {isEditing ? 'Chỉnh sửa' : 'Thêm'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, {backgroundColor: 'red'}]}
+                style={[styles.button, { backgroundColor: 'red' }]}
                 onPress={() => setModalVisible(false)}>
                 <Text style={styles.buttonText}>Đóng</Text>
               </TouchableOpacity>
@@ -327,7 +348,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    width:"40%",
+    width: "40%",
     backgroundColor: '#f1f1f1',
     paddingHorizontal: 10,
     borderRadius: 5,
@@ -340,7 +361,7 @@ const styles = StyleSheet.create({
   searchIcon: {
     width: 20,
     height: 20,
-    marginLeft:-20,
+    marginLeft: -20,
   },
   listHeader: {
     flexDirection: 'row',
