@@ -12,8 +12,10 @@ import PaymentScreen from './src/screens/PaymentScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai';
 import AdminDecentScreen from './src/screens/PhanquyenScreen/danhsachnguoidung';
 import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
+import TransactionhistoryScreen from './src/screens/TransactionhistoryScreen/transactionhistory.js';
 import UserManagerScreen from './src/screens/UserManagerScreen/UserManager.js';
-import Adminpower from './src/screens/PhanquyenScreen/danhsachnguoidung.js';
+import StatisticalScreen from './src/screens/StatisticalScreen/statistical.js';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -34,6 +36,8 @@ export default function App() {
           <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
           <Stack.Screen name="UserManagerScreen" component={UserManagerScreen} />
+          <Stack.Screen name="TransactionhistoryScreen" component={TransactionhistoryScreen} />
+          <Stack.Screen name="StatisticalScreen" component={StatisticalScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

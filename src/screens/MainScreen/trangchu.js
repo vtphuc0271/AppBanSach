@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import {UserContext} from '../../context/UserContext';
-import {useNavigation} from '@react-navigation/native';
+import { UserContext } from '../../context/UserContext';
+import { useNavigation } from '@react-navigation/native';
 
 const TrangChuScreen = () => {
   const navigation = useNavigation();
@@ -27,16 +27,20 @@ const TrangChuScreen = () => {
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const {user} = useContext(UserContext);
+  const { user } = useContext(UserContext);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [selectedPublisher, setSelectedPublisher] = useState(null);
+
   //console.log('day la user: ', user);
   const [data, setData] = useState([]);
-
   const toggleFilter = () => {
-    setFilterItem(!filterItem);
-    if (sortItem == true) {
-      setsortItem(!sortItem);
+    setFilterItem(!filterItem); // Chuyển đổi trạng thái hiển thị của bộ lọc
+    if (sortItem) {
+      setsortItem(false); // Đóng phần sắp xếp nếu đang mở
     }
   };
+
 
   const toggleSort = () => {
     setsortItem(!sortItem);
@@ -46,8 +50,14 @@ const TrangChuScreen = () => {
   };
 
   const filteredBooks = data.filter(book =>
-    book.tenSach?.toLowerCase().includes(searchText?.toLowerCase() || ''),
+    (!searchText || book.tenSach?.toLowerCase().includes(searchText.toLowerCase())) &&
+    (!selectedAuthor || book.tacGia === selectedAuthor) &&
+    (!selectedCategory || book.theLoai === selectedCategory) &&
+    (!selectedPublisher || book.nhaXuatBan === selectedPublisher)
   );
+
+
+
 
   const sortData = () => {
     const sortedData = [...data];
@@ -210,12 +220,13 @@ const TrangChuScreen = () => {
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
-    navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
+    navigation.navigate('PaymentScreen', { id_Sach: id_Sach });
   };
 
-  const displayLimitedData = (data, limit) => {
-    return data.slice(0, limit);
+  const displayLimitedData = (data, limit, showAll) => {
+    return showAll ? data : data.slice(0, limit);
   };
+
 
   const toggleExpand = itemId => {
     setExpandedItem(prevState => (prevState === itemId ? null : itemId));
@@ -239,18 +250,18 @@ const TrangChuScreen = () => {
     return stars;
   };
 
-  const renderItem = ({item}) => (
+  const renderItem = ({ item }) => (
     <View
       style={[
         styles.itemContainer,
-        {backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6'},
+        { backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6' },
       ]}>
       <TouchableOpacity onPress={() => toggleExpand(item.id)}>
         <View style={styles.row}>
           <View style={[styles.imageContainer]}>
             {item.anhSach ? (
               <Image
-                source={{uri: item.anhSach}}
+                source={{ uri: item.anhSach }}
                 style={styles.categoryImage}
               />
             ) : (
@@ -261,11 +272,11 @@ const TrangChuScreen = () => {
             )}
           </View>
           <View style={styles.infoContainer}>
-            <View style={{marginLeft: 15, padding: 0}}>
-              <Text style={[styles.title, {maxWidth: 250, flexWrap: 'wrap'}]}>
+            <View style={{ marginLeft: 15, padding: 0 }}>
+              <Text style={[styles.title, { maxWidth: 250, flexWrap: 'wrap' }]}>
                 {item.tenSach}
               </Text>
-              <Text style={[styles.text, {maxWidth: 250, flexWrap: 'wrap'}]}>
+              <Text style={[styles.text, { maxWidth: 250, flexWrap: 'wrap' }]}>
                 {getAuthorNameById(item.tacGia)}
               </Text>
               <View style={styles.ratingContainer}>
@@ -275,9 +286,9 @@ const TrangChuScreen = () => {
               <Text style={styles.giaTien}>
                 {item.giaTien
                   ? new Intl.NumberFormat('vi-VN', {
-                      style: 'currency',
-                      currency: 'VND',
-                    }).format(item.giaTien)
+                    style: 'currency',
+                    currency: 'VND',
+                  }).format(item.giaTien)
                   : '0 VNĐ'}
               </Text>
             </View>
@@ -363,13 +374,13 @@ const TrangChuScreen = () => {
         style={[
           styles.sortOption,
           sortOption === option
-            ? {backgroundColor: '#4CAF50'}
-            : {backgroundColor: '#fff'}, // Bôi đen tùy chọn đã chọn
+            ? { backgroundColor: '#4CAF50' }
+            : { backgroundColor: '#fff' }, // Bôi đen tùy chọn đã chọn
         ]}
         onPress={() => handleSortOption(option)}
         disabled={sortOption === option} // Disable lựa chọn đã chọn
       >
-        <Text style={{color: sortOption === option ? '#fff' : '#000'}}>
+        <Text style={{ color: sortOption === option ? '#fff' : '#000' }}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -393,7 +404,9 @@ const TrangChuScreen = () => {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.searchButton}>
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={toggleFilter}>
           <Image
             source={require('../../assets/BoLoc.png')}
             style={styles.searchIcon}
@@ -413,64 +426,84 @@ const TrangChuScreen = () => {
       {filterItem && (
         <ScrollView
           style={styles.filterContainer}
-          contentContainerStyle={{paddingBottom: 50}}>
+          contentContainerStyle={{ paddingBottom: 50 }}>
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(
-              theLoai,
-              showAllCategories ? theLoai.length : 6,
-            ).map((theLoai, index) => (
-              <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{theLoai}</Text>
+            {displayLimitedData(theLoai, 3, showAllCategories).map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tag,
+                  selectedCategory === item.id && { backgroundColor: '#4CAF50' }, // Đổi màu thể loại được chọn
+                ]}
+                onPress={() => setSelectedCategory(prev => (prev === item.id ? null : item.id))} // Nếu nhấn lại thì bỏ chọn
+              >
+                <Text style={{ color: selectedCategory === item.id ? '#fff' : '#000' }}>
+                  {item.name}
+                </Text>
               </TouchableOpacity>
+
             ))}
           </View>
-          <TouchableOpacity
-            onPress={() => setShowAllCategories(!showAllCategories)}>
+          <TouchableOpacity onPress={() => setShowAllCategories(!showAllCategories)}>
             <Text style={styles.showMoreText}>
-              {showAllCategories ? 'ẩn...' : 'Tất cả...'}
+              {showAllCategories ? 'Ẩn...' : 'Tất cả...'}
             </Text>
           </TouchableOpacity>
 
-          {/* Tác Giả */}
+          {/* Tác giả */}
           <Text style={styles.sectionTitle}>Tác Giả</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(tacGia, showAllAuthors ? tacGia.length : 6).map(
-              (tacGia, index) => (
-                <TouchableOpacity key={index} style={styles.tag}>
-                  <Text>{tacGia.name}</Text>
-                </TouchableOpacity>
-              ),
-            )}
-          </View>
+            {displayLimitedData(tacGia, 3, showAllAuthors).map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tag,
+                  selectedAuthor === item.id && { backgroundColor: '#4CAF50' }, // Đổi màu khi chọn
+                ]}
+                onPress={() => setSelectedAuthor(prev => (prev === item.id ? null : item.id))} // Nhấn lại để bỏ chọn
+              >
+                <Text style={{ color: selectedAuthor === item.id ? '#fff' : '#000' }}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
 
+            ))}
+          </View>
           <TouchableOpacity onPress={() => setShowAllAuthors(!showAllAuthors)}>
             <Text style={styles.showMoreText}>
               {showAllAuthors ? 'Ẩn...' : 'Tất cả...'}
             </Text>
           </TouchableOpacity>
 
-          {/* Nhà Xuất Bản */}
+          {/* Nhà xuất bản */}
           <Text style={styles.sectionTitle}>Nhà Xuất Bản</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(
-              nhaXuatBan,
-              showAllPublishers ? nhaXuatBan.length : 6,
-            ).map((nhaXuatBan, index) => (
-              <TouchableOpacity key={index} style={styles.tag}>
-                <Text>{nhaXuatBan}</Text>
+            {displayLimitedData(nhaXuatBan, 3, showAllPublishers).map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tag,
+                  selectedPublisher === item.id && { backgroundColor: '#4CAF50' }, // Đổi màu khi chọn
+                ]}
+                onPress={() => setSelectedPublisher(prev => (prev === item.id ? null : item.id))} // Nhấn lại để bỏ chọn
+              >
+                <Text style={{ color: selectedPublisher === item.id ? '#fff' : '#000' }}>
+                  {item.name}
+                </Text>
               </TouchableOpacity>
+
             ))}
           </View>
-          <TouchableOpacity
-            onPress={() => setShowAllPublishers(!showAllPublishers)}>
+          <TouchableOpacity onPress={() => setShowAllPublishers(!showAllPublishers)}>
             <Text style={styles.showMoreText}>
-              {showAllPublishers ? 'ẩn...' : 'Tất cả...'}
+              {showAllPublishers ? 'Ẩn...' : 'Tất cả...'}
             </Text>
           </TouchableOpacity>
         </ScrollView>
       )}
+
       <FlatList
         data={filteredBooks}
         renderItem={renderItem}
@@ -572,7 +605,7 @@ const styles = StyleSheet.create({
     width: 105,
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 15,
     elevation: 8,
@@ -690,4 +723,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TrangChuScreen;
+export default TrangChuScreen; 
