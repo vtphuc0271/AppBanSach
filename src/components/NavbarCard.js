@@ -280,7 +280,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
             </>
           ) : (
             <>
-              {user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro) === '1' || (user && user.maVaiTro) === '3' || (user && user.maVaiTro) === '4' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => handleQuanTri()}>
@@ -293,7 +293,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Menu người dùng</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -309,7 +309,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Sách</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -326,7 +326,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Nhà xuất bản</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -342,7 +342,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Thể loại</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
                 <TouchableOpacity
                   style={styles.buttonMenuContent}
                   onPress={() => {
@@ -388,8 +388,11 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Phân quyền</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
+                <TouchableOpacity style={styles.buttonMenuContent} onPress={() => {
+                  navigation.navigate('TransactionhistoryScreen');
+                  closeMenu();
+                }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenulichsugiaodich.png')}
@@ -399,8 +402,11 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Lịch sử giao dịch</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
+                <TouchableOpacity style={styles.buttonMenuContent} onPress={() => {
+                  navigation.navigate('StatisticalScreen');
+                  closeMenu();
+                }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantri.png')}
@@ -410,13 +416,33 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                   <Text style={styles.menuItem}>Thống kê doanh thu</Text>
                 </TouchableOpacity>
               ) : null}
-              {user && user.maVaiTro === '1' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}
-                onPress={() => {
-                  navigation.navigate('OrderListScreen');
-                  closeMenu();
-                }}>
-                  <View style={{paddingLeft: 20}}></View>
+              {(user && user.maVaiTro === '4') ||
+                (user && user.maVaiTro === '1') ? (
+                <TouchableOpacity style={styles.buttonMenuContent}>
+                  <View style={{ paddingLeft: 20 }}></View>
+                  <Image
+                    source={require('../assets/iconmenudanhsachdonhangcangiao.png')}
+                    style={styles.icon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.menuItem}>Đơn hàng cần giao</Text>
+                </TouchableOpacity>
+              ) : null}
+              {(user && user.maVaiTro === '4') ||
+                (user && user.maVaiTro === '1') ? (
+                <TouchableOpacity style={styles.buttonMenuContent}>
+                  <View style={{ paddingLeft: 20 }}></View>
+                  <Image
+                    source={require('../assets/iconmenudonhang.png')}
+                    style={styles.icon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.menuItem}>Đơn hàng của tôi</Text>
+                </TouchableOpacity>
+              ) : null}
+              {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
+                <TouchableOpacity style={styles.buttonMenuContent}>
+                  <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantri.png')}
                     style={styles.icon}
