@@ -27,6 +27,7 @@ const TrangChuScreen = () => {
   const [sortOption, setSortOption] = useState(null);
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
+  const [ngonNgu, setNgonNgu] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
   const { user } = useContext(UserContext);
   const [data, setData] = useState([]);
@@ -164,6 +165,11 @@ const TrangChuScreen = () => {
     const tl = theLoai.find(t => t.id === theLoaiId);
     return tl ? tl.name : 'Unknown theLoai';
   };
+  
+  const getNgonNguNameById = ngonNguId => {
+    const tl = ngonNgu.find(t => t.id === ngonNguId);
+    return tl ? tl.name : 'Unknown theLoai';
+  };
 
   const getNXBNameById = nxbId => {
     const nxb = nhaXuatBan.find(n => n.id === nxbId);
@@ -201,6 +207,20 @@ const TrangChuScreen = () => {
         },
       );
 
+      // Lấy dữ liệu ngon ngu
+    const unsubscribeNgonNgu = firestore().collection('languages').onSnapshot(
+      snapshot => {
+        const ngonNgu = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+        }));
+        setNgonNgu(ngonNgu);
+      },
+      error => {
+        console.error('Error fetching authors: ', error);
+      }
+    );
+
     const unsubscribePublishers = firestore()
       .collection('NhaXuatBan')
       .onSnapshot(
@@ -237,6 +257,7 @@ const TrangChuScreen = () => {
       unsubscribeGenres();
       unsubscribePublishers();
       unsubscribeBooks();
+      unsubscribeNgonNgu();
     };
   }, []);
 
@@ -367,12 +388,12 @@ const TrangChuScreen = () => {
             <Text>Thể loại: {getTheLoaiNameById(item.theLoai)}</Text>
             <View style={styles.row}>
               <View style={styles.column}>
-                <Text>Phần: {'item.part'}</Text>
-                <Text>In lần thứ: {'item.edition'}</Text>
+                <Text>Phần: {item.phan}</Text>
+                <Text>In lần thứ: {item.lanIn}</Text>
               </View>
               <View style={styles.column}>
                 <Text>Năm xuất bản: {item.namXuatBan}</Text>
-                <Text>Ngôn ngữ: {'item.language'}</Text>
+                <Text>Ngôn ngữ: {getNgonNguNameById(item.ngonNgu)}</Text>
               </View>
             </View>
             <Text>Đơn vị liên kết: {getNXBNameById(item.nhaXuatBan)}</Text>
