@@ -26,7 +26,8 @@ const PaymentScreen = ({route}) => {
   const [open, setOpen] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [orderId, setOrderId] = useState(null);
-  console.log('cartItems', cartItems);
+  //console.log('cartItems', cartItems);
+  //console.log('user', user);
   const navigation = useNavigation();
   const {id_Sach} = route.params || {};
 

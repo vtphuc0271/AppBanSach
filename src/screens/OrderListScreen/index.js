@@ -43,10 +43,10 @@ const OrderListScreen = () => {
   const [sortItem, setsortItem] = useState(null);
   const [sortOption, setSortOption] = useState(null);
 
-  console.log('orders', orders);
+  //console.log('orders', orders);
   //console.log('selectedOrder', selectedOrder);
   //console.log('chitietOrders', chitietOrders);
-  console.log('donHangShiperWithUsers', donHangShiperWithUsers);
+  //console.log('donHangShiperWithUsers', donHangShiperWithUsers);
   useEffect(() => {
     let unsubscribe;
     setDonHangShiperWithUsers([]);
@@ -595,100 +595,103 @@ const OrderListScreen = () => {
       const donHangRef = firestore().collection('DonHang').doc(id);
       const donHangShiperRef = firestore()
         .collection('NguoiDung')
-        .doc(shipperId) // Thay bằng user hiện tại
+        .doc(shipperId)
         .collection('DonHangShiper')
         .doc(id);
-
+  
       // Lấy dữ liệu đơn hàng từ `DonHang`
       const donHangDoc = await donHangRef.get();
       if (!donHangDoc.exists) {
         throw new Error(`Đơn hàng với ID ${id} không tồn tại trong DonHang`);
       }
       const donHangData = donHangDoc.data();
-
+  
       // Lấy dữ liệu đơn hàng từ `DonHangShiper`
       const donHangShiperDoc = await donHangShiperRef.get();
       if (!donHangShiperDoc.exists) {
-        throw new Error(
-          `Đơn hàng với ID ${id} không tồn tại trong DonHangShiper`,
-        );
+        throw new Error(`Đơn hàng với ID ${id} không tồn tại trong DonHangShiper`);
       }
       const donHangShiperData = donHangShiperDoc.data();
-
+  
       // Kiểm tra xem đã có `ngayThanhToan` trong DonHang chưa
       if (!donHangData.ngayThanhToan) {
         // Nếu chưa có `ngayThanhToan`, thêm giá trị mới
         await donHangRef.update({
           tinhTrangDonHang: 3,
           tinhTrangThanhToan: 1,
-          ngayThanhToan: firestore.FieldValue.serverTimestamp(), // Thêm thời gian thanh toán
+          ngayThanhToan: firestore.FieldValue.serverTimestamp(),
         });
       } else {
         console.log('Đã có ngày thanh toán, không cần cập nhật.');
       }
-
+  
       // Thêm đơn hàng đã cập nhật vào `DonHangThanhCong`
-      const donHangThanhCongRef = firestore()
-        .collection('DonHangThanhCong')
-        .doc(id);
+      const donHangThanhCongRef = firestore().collection('DonHangThanhCong').doc(id);
       await donHangThanhCongRef.set({
         ...donHangData,
         tinhTrangDonHang: 3,
         tinhTrangThanhToan: 1,
-        ngayThanhToan:
-          donHangData.ngayThanhToan || firestore.FieldValue.serverTimestamp(),
+        ngayThanhToan: donHangData.ngayThanhToan || firestore.FieldValue.serverTimestamp(),
       });
-
+  
       // Xử lý subcollection `ChiTietDonHang`
       const chiTietSnapshot = await firestore()
         .collection('ChiTietDonHang')
         .doc(id)
         .collection('Items')
         .get();
-
+  
       if (!chiTietSnapshot.empty) {
         const batch = firestore().batch();
-
-        chiTietSnapshot.forEach(doc => {
+  
+        const daMuaRef = firestore().collection('DaMua').doc(donHangData.id_NguoiDung);
+  
+        chiTietSnapshot.forEach((doc) => {
           const chiTietData = doc.data();
-
+  
           // Thêm vào `ChiTietDonHangThanhCong`
           const chiTietThanhCongRef = firestore()
             .collection('ChiTietDonHangThanhCong')
             .doc(id)
             .collection('Items')
             .doc(doc.id);
-
+  
           batch.set(chiTietThanhCongRef, chiTietData);
-
+  
+          // Thêm vào `SachDaMua` trong `DaMua` với `ngayMua` là `ngayTao` của `DonHang`
+          const sachDaMuaRef = daMuaRef.collection('SachDaMua').doc(doc.id);
+          batch.set(sachDaMuaRef, {
+            ngayMua: donHangData.ngayTao || null, // Sử dụng ngayTao từ DonHang
+          });
+  
           // Xóa tài liệu khỏi `ChiTietDonHang`
           batch.delete(doc.ref);
         });
-
+  
         // Commit batch
         await batch.commit();
       }
-
+  
       // Xóa đơn hàng khỏi `DonHang`
       await donHangRef.delete();
-
+  
       // Thêm đơn hàng đã xóa từ `DonHangShiper` vào `DonHangShiperDaGiao`
       const donHangShiperDaGiaoRef = firestore()
         .collection('NguoiDung')
-        .doc(shipperId) // Thay bằng user hiện tại
+        .doc(shipperId)
         .collection('DonHangShiperDaGiao')
         .doc(id);
       await donHangShiperDaGiaoRef.set(donHangShiperData);
-
+  
       // Xóa đơn hàng khỏi `DonHangShiper`
       await donHangShiperRef.delete();
-
+  
       console.log(`Hoàn tất xử lý đơn hàng và chi tiết đơn hàng với ID ${id}`);
     } catch (error) {
       console.error('Lỗi khi xử lý đơn hàng:', error);
     }
   };
-
+  
   const renderOrder = ({item}) => (
     <TouchableOpacity
       style={styles.card}
@@ -780,7 +783,7 @@ const OrderListScreen = () => {
       {donHangShiperWithUsers?.find(shipper => shipper.id === item.id)
         ?.tinhTrangDonHangShiper === -1 ? (
         <View style={styles.row}>
-          <Text style={styles.title}>Tên Shiper: </Text>
+          <Text style={styles.title}>Lý do: </Text>
           <View style={styles.lineContainer}>
             <Text style={styles.line}></Text>
             <Text style={styles.content}>Đơn hàng giao không thành công</Text>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import { UserContext } from '../../context/UserContext';
-import { useNavigation } from '@react-navigation/native';
-
+import {UserContext} from '../../context/UserContext';
+import {useNavigation} from '@react-navigation/native';
 
 const TrangChuScreen = () => {
   const navigation = useNavigation();
@@ -29,7 +28,7 @@ const TrangChuScreen = () => {
   const [theLoai, setGenres] = useState([]);
   const [ngonNgu, setNgonNgu] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const {  user,matkhau  } = useContext(UserContext);
+  const {user, matkhau} = useContext(UserContext);
   const [data, setData] = useState([]);
   const [purchasedBooks, setPurchasedBooks] = useState([]);
 
@@ -37,9 +36,9 @@ const TrangChuScreen = () => {
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [selectedPublisher, setSelectedPublisher] = useState(null);
 
-  console.log('day la user: ', user);
-  console.log('day la matkhau: ', matkhau);
-
+  //console.log('day la user: ', user);
+  //console.log('day la matkhau: ', matkhau);
+  //console.log('day la purchasedBooks: ', purchasedBooks);
   const toggleFilter = () => {
     setFilterItem(!filterItem); // Chuyển đổi trạng thái hiển thị của bộ lọc
     if (sortItem) {
@@ -48,32 +47,29 @@ const TrangChuScreen = () => {
   };
 
   //ham danh gia
-  const canReviewBook = (userId, bookId) => {
-    return new Promise((resolve, reject) => {
-      const unsubscribe = firestore()
-        .collection('DaMua')
-        .doc(userId)
-        .collection('SachDaMua')
-        .doc(bookId)
-        .get() // Đổi .onSnapshot() thành .get() để lấy một lần dữ liệu thay vì lắng nghe liên tục
-        .then(snapshot => {
+  const canReviewBook = (userId, bookId, callback) => {
+    return firestore()
+      .collection('DaMua')
+      .doc(userId)
+      .collection('SachDaMua')
+      .doc(bookId)
+      .onSnapshot(
+        snapshot => {
           if (snapshot.exists) {
-            resolve(true);
+            callback(true);
           } else {
-            resolve(false);
+            callback(false);
           }
-        })
-        .catch(error => {
-          console.error('Error checking if book is purchased: ', error);
-          resolve(false); // Trả về false nếu có lỗi
-        });
-
-      return unsubscribe; // Clean up nếu cần thiết
-    });
+        },
+        error => {
+          console.error('Error checking purchased book: ', error);
+          callback(false);
+        },
+      );
   };
 
   const renderReviewButton = item => {
-    const isPurchased = purchasedBooks.includes(item.id); // Kiểm tra sách đã được mua chưa
+    const isPurchased = purchasedBooks.includes(item.id);
     return (
       <TouchableOpacity
         style={styles.buttonReviewNow}
@@ -92,28 +88,36 @@ const TrangChuScreen = () => {
   };
 
   useEffect(() => {
-    const checkPurchasedBooks = async () => {
-      if (!user || !data || data.length === 0) return;
+    if (!user || !data || data.length === 0) return;
 
-      const purchased = [];
-      for (const book of data) {
-        try {
-          const isPurchased = await canReviewBook(user.uid, book.id);
+    const unsubscribeFunctions = []; 
+
+    const purchasedSet = new Set();
+
+    const checkPurchasedBooks = () => {
+      data.forEach(book => {
+        const unsubscribe = canReviewBook(user.uid, book.id, isPurchased => {
           if (isPurchased) {
-            purchased.push(book.id);
+            purchasedSet.add(book.id); 
+          } else {
+            purchasedSet.delete(book.id);
           }
-        } catch (error) {
-          console.error('Error checking purchased book:', error);
-        }
-      }
-      setPurchasedBooks(purchased); // Cập nhật danh sách sách đã mua
+
+          setPurchasedBooks([...purchasedSet]);
+        });
+
+        unsubscribeFunctions.push(unsubscribe);
+      });
     };
 
     checkPurchasedBooks();
+
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+    };
   }, [data, user]);
 
   //ham danh gia
-
 
   const toggleSort = () => {
     setsortItem(!sortItem);
@@ -122,15 +126,14 @@ const TrangChuScreen = () => {
     }
   };
 
-  const filteredBooks = data.filter(book =>
-    (!searchText || book.tenSach?.toLowerCase().includes(searchText.toLowerCase())) &&
-    (!selectedAuthor || book.tacGia === selectedAuthor) &&
-    (!selectedCategory || book.theLoai === selectedCategory) &&
-    (!selectedPublisher || book.nhaXuatBan === selectedPublisher)
+  const filteredBooks = data.filter(
+    book =>
+      (!searchText ||
+        book.tenSach?.toLowerCase().includes(searchText.toLowerCase())) &&
+      (!selectedAuthor || book.tacGia === selectedAuthor) &&
+      (!selectedCategory || book.theLoai === selectedCategory) &&
+      (!selectedPublisher || book.nhaXuatBan === selectedPublisher),
   );
-
-
-
 
   const sortData = () => {
     const sortedData = [...data];
@@ -315,13 +318,12 @@ const TrangChuScreen = () => {
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
-    navigation.navigate('PaymentScreen', { id_Sach: id_Sach });
+    navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
   };
 
   const displayLimitedData = (data, limit, showAll) => {
     return showAll ? data : data.slice(0, limit);
   };
-
 
   const toggleExpand = itemId => {
     setExpandedItem(prevState => (prevState === itemId ? null : itemId));
@@ -466,7 +468,7 @@ const TrangChuScreen = () => {
                 source={require('../../assets/themvaogio.png')}
                 style={styles.icon}
               />
-            </TouchableOpacity>     
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.buttonBuyNow}
               onPress={() => handleBuyNow(item.id)}>
@@ -518,9 +520,7 @@ const TrangChuScreen = () => {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={toggleFilter}>
+        <TouchableOpacity style={styles.searchButton} onPress={toggleFilter}>
           <Image
             source={require('../../assets/BoLoc.png')}
             style={styles.searchIcon}
@@ -544,23 +544,34 @@ const TrangChuScreen = () => {
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(theLoai, 3, showAllCategories).map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.tag,
-                  selectedCategory === item.id && { backgroundColor: '#4CAF50' }, // Đổi màu thể loại được chọn
-                ]}
-                onPress={() => setSelectedCategory(prev => (prev === item.id ? null : item.id))} // Nếu nhấn lại thì bỏ chọn
-              >
-                <Text style={{ color: selectedCategory === item.id ? '#fff' : '#000' }}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-
-            ))}
+            {displayLimitedData(theLoai, 3, showAllCategories).map(
+              (item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.tag,
+                    selectedCategory === item.id && {
+                      backgroundColor: '#4CAF50',
+                    }, // Đổi màu thể loại được chọn
+                  ]}
+                  onPress={() =>
+                    setSelectedCategory(prev =>
+                      prev === item.id ? null : item.id,
+                    )
+                  } // Nếu nhấn lại thì bỏ chọn
+                >
+                  <Text
+                    style={{
+                      color: selectedCategory === item.id ? '#fff' : '#000',
+                    }}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
-          <TouchableOpacity onPress={() => setShowAllCategories(!showAllCategories)}>
+          <TouchableOpacity
+            onPress={() => setShowAllCategories(!showAllCategories)}>
             <Text style={styles.showMoreText}>
               {showAllCategories ? 'Ẩn...' : 'Tất cả...'}
             </Text>
@@ -569,21 +580,29 @@ const TrangChuScreen = () => {
           {/* Tác giả */}
           <Text style={styles.sectionTitle}>Tác Giả</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(tacGia, 3, showAllAuthors).map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.tag,
-                  selectedAuthor === item.id && { backgroundColor: '#4CAF50' }, // Đổi màu khi chọn
-                ]}
-                onPress={() => setSelectedAuthor(prev => (prev === item.id ? null : item.id))} // Nhấn lại để bỏ chọn
-              >
-                <Text style={{ color: selectedAuthor === item.id ? '#fff' : '#000' }}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-
-            ))}
+            {displayLimitedData(tacGia, 3, showAllAuthors).map(
+              (item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.tag,
+                    selectedAuthor === item.id && {backgroundColor: '#4CAF50'}, // Đổi màu khi chọn
+                  ]}
+                  onPress={() =>
+                    setSelectedAuthor(prev =>
+                      prev === item.id ? null : item.id,
+                    )
+                  } // Nhấn lại để bỏ chọn
+                >
+                  <Text
+                    style={{
+                      color: selectedAuthor === item.id ? '#fff' : '#000',
+                    }}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
           <TouchableOpacity onPress={() => setShowAllAuthors(!showAllAuthors)}>
             <Text style={styles.showMoreText}>
@@ -594,23 +613,34 @@ const TrangChuScreen = () => {
           {/* Nhà xuất bản */}
           <Text style={styles.sectionTitle}>Nhà Xuất Bản</Text>
           <View style={styles.tagContainer}>
-            {displayLimitedData(nhaXuatBan, 3, showAllPublishers).map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.tag,
-                  selectedPublisher === item.id && { backgroundColor: '#4CAF50' }, // Đổi màu khi chọn
-                ]}
-                onPress={() => setSelectedPublisher(prev => (prev === item.id ? null : item.id))} // Nhấn lại để bỏ chọn
-              >
-                <Text style={{ color: selectedPublisher === item.id ? '#fff' : '#000' }}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-
-            ))}
+            {displayLimitedData(nhaXuatBan, 3, showAllPublishers).map(
+              (item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.tag,
+                    selectedPublisher === item.id && {
+                      backgroundColor: '#4CAF50',
+                    }, // Đổi màu khi chọn
+                  ]}
+                  onPress={() =>
+                    setSelectedPublisher(prev =>
+                      prev === item.id ? null : item.id,
+                    )
+                  } // Nhấn lại để bỏ chọn
+                >
+                  <Text
+                    style={{
+                      color: selectedPublisher === item.id ? '#fff' : '#000',
+                    }}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
-          <TouchableOpacity onPress={() => setShowAllPublishers(!showAllPublishers)}>
+          <TouchableOpacity
+            onPress={() => setShowAllPublishers(!showAllPublishers)}>
             <Text style={styles.showMoreText}>
               {showAllPublishers ? 'Ẩn...' : 'Tất cả...'}
             </Text>
@@ -883,4 +913,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TrangChuScreen; 
+export default TrangChuScreen;

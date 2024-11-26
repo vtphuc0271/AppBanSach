@@ -26,7 +26,7 @@ const CartScreen = () => {
   const [authors, setAuthors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
-  console.log(user);
+  //console.log(user);
   // Hàm tính tổng tiền trong giỏ hàng
   const getTotalPrice = () => {
     return cartItems.reduce(
@@ -107,7 +107,7 @@ const CartScreen = () => {
     return unsubscribe;
   };
 
-  console.log('cartItems', cartItems);
+  //console.log('cartItems', cartItems);
   useEffect(() => {
     if (user && user.uid) {
       setIsLoading(true);

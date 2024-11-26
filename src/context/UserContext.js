@@ -10,6 +10,45 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [matkhau, setMK] = useState(null);
 
+  // Hàm để lắng nghe dữ liệu người dùng
+  const listenToUserDoc = (uid) => {
+    const userDocRef = firebase.firestore().collection('NguoiDung').doc(uid);
+
+    // Sử dụng onSnapshot để lắng nghe document người dùng
+    const unsubscribeDoc = userDocRef.onSnapshot(
+      (docSnapshot) => {
+        if (docSnapshot.exists) {
+          const userData = docSnapshot.data();
+          const updatedUser = {
+            uid: uid,
+            email: firebase.auth().currentUser.email,
+            hoTen: userData.hoTen || "",
+            createdAt: userData.createdAt || "",
+            hinh: userData.hinh || "",
+            maVaiTro: userData.maVaiTro || "",
+            diaChi: userData.diaChi || "",
+            soDienThoai: userData.soDienThoai || "",
+            mk: "" // Thêm thuộc tính mk vào user
+          };
+
+          setUser(updatedUser);
+
+          // Lưu vào AsyncStorage để duy trì trạng thái
+          AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        } else {
+          setUser(null);
+          AsyncStorage.removeItem('user'); // Xóa thông tin nếu không tìm thấy document
+        }
+      },
+      (error) => {
+        console.error("Error fetching user data: ", error);
+        setUser(null);
+      }
+    );
+
+    return unsubscribeDoc;
+  };
+
   useEffect(() => {
     const checkUser = async () => {
       const storedUser = await AsyncStorage.getItem('user');
@@ -20,37 +59,12 @@ export const UserProvider = ({ children }) => {
 
     checkUser();
 
-    const unsubscribe = firebase.auth().onAuthStateChanged(async (currentUser) => {
+    // Lắng nghe thay đổi trạng thái đăng nhập
+    const unsubscribeAuth = firebase.auth().onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
-        const userDocRef = firebase.firestore().collection('NguoiDung').doc(currentUser.uid);
+        const unsubscribeDoc = listenToUserDoc(currentUser.uid);
 
-        // Sử dụng onSnapshot để cập nhật khi document thay đổi
-        const unsubscribeDoc = userDocRef.onSnapshot(docSnapshot => {
-          if (docSnapshot.exists) {
-            const userData = docSnapshot.data();
-            const updatedUser = {
-              uid: currentUser.uid,
-              email: currentUser.email,
-              hoTen: userData.hoTen || "",
-              createdAt: userData.createdAt || "",
-              hinh: userData.hinh || "",
-              maVaiTro: userData.maVaiTro || "",
-              diaChi: userData.diaChi || "",
-              soDienThoai: userData.soDienThoai || "",
-              mk: "" // Thêm thuộc tính mk vào user
-            };
-
-            setUser(updatedUser);
-            // Lưu trữ lại thông tin người dùng vào AsyncStorage để sử dụng khi app reload
-            AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-          } else {
-            setUser(null); // Không có document thì đặt user là null
-            AsyncStorage.removeItem('user'); // Xóa thông tin người dùng khỏi AsyncStorage nếu không tìm thấy
-          }
-        }, error => {
-          console.error("Error fetching user data: ", error);
-        });
-
+        // Trả về unsubscribe khi người dùng thay đổi hoặc component bị unmount
         return () => unsubscribeDoc();
       } else {
         setUser(null);
@@ -58,9 +72,8 @@ export const UserProvider = ({ children }) => {
       }
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
-
 
   return (
     <UserContext.Provider value={{ user, matkhau, setMK }}>

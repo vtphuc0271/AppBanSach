@@ -192,3 +192,61 @@ export const GiveOrder = async (orderId, orderStatus) => {
     console.error('Lỗi khi nhận đơn:', error);
   }
 };
+
+
+export const getDonHangDataWithUser = (selectedTab, idNguoiDung, callback, onError) => {
+  const unsubscribe = firestore()
+    .collection('DonHang')
+    .where('tinhTrangDonHang', '==', selectedTab)  // Lọc theo trạng thái đơn hàng
+    .where('id_NguoiDung', '==', idNguoiDung)  // Lọc theo ID người dùng
+    .onSnapshot(
+      snapshot => {
+        if (snapshot.empty) {
+          console.log('Không có đơn hàng nào.');
+          callback([]); // Nếu không có đơn hàng thì trả về mảng rỗng
+          return;
+        }
+
+        const donHangList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        callback(donHangList); // Gửi danh sách đơn hàng về callback
+      },
+      error => {
+        console.error('Lỗi khi lắng nghe dữ liệu:', error);
+        onError(error); // Gửi lỗi về callback xử lý lỗi
+      }
+    );
+
+  return unsubscribe; // Trả về unsubscribe để có thể dọn dẹp sau khi không cần lắng nghe
+};
+
+export const getDonHangThanhCongWithUser = (idNguoiDung,callback, onError) => {
+  const unsubscribe = firestore()
+    .collection('DonHangThanhCong')
+    .where('id_NguoiDung', '==', idNguoiDung)
+    .onSnapshot(
+      snapshot => {
+        if (snapshot.empty) {
+          console.log('Không có đơn hàng nào.');
+          callback([]);
+          return;
+        }
+
+        const donHangList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        callback(donHangList);
+      },
+      error => {
+        console.error('Lỗi khi lắng nghe dữ liệu:', error);
+        onError(error);
+      },
+    );
+
+  return unsubscribe;
+};

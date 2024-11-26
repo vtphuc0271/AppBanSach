@@ -23,8 +23,9 @@ import LoadingScreen from './src/screens/LoadingScreen/LoadingScreen.js';
 import PushLanguagesToFirestore from './src/pushLanguagesToFirestore.js';
 import MyOder from './src/screens/Shipper/MyOder.js';
 import OderDelivery from './src/screens/Shipper/OrderDelivered.js';
+import UserOrdersScreen from './src/screens/UserOrdersScreen/index.js';
 const Stack = createStackNavigator();
-
+UserOrdersScreen
 export default function App() {
   return (
     <UserProvider>
@@ -51,6 +52,7 @@ export default function App() {
           <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
           <Stack.Screen name="MyOder" component={MyOder} />
           <Stack.Screen name="OderDelivery" component={OderDelivery} />
+          <Stack.Screen name="UserOrdersScreen" component={UserOrdersScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
