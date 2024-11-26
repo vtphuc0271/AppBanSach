@@ -209,7 +209,12 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 (user && user.maVaiTro === '1') ||
                 (user && user.maVaiTro === '3') ||
                 (user && user.maVaiTro === '4') ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent}
+                  onPress={() => {
+                  navigation.navigate('Account');
+                  closeMenu();
+                }}
+                >
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuthongtincanhan.png')}
@@ -432,7 +437,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
             onPress={handleAuthPress}>
             <View style={{ paddingLeft: 20 }} />
             <Image
-              source={require('../assets/iconmenuquantri.png')}
+              source={user ? require('../assets/log_out.png') : require('../assets/log_in.png')}
               style={styles.icon}
               resizeMode="contain"
             />

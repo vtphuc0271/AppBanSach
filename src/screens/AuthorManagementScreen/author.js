@@ -49,9 +49,9 @@ const CategoryList = () => {
         const publisher = categories.find(cat => cat.id === id);
         if (publisher) {
             setEditPublisherId(id);
-            setNewPublisherName(publisher.name); 
+            setNewPublisherName(publisher.name);
             setNewPublisherImage(publisher.image);
-            setNewPublisherBirthYear(publisher.birthYear);       
+            setNewPublisherBirthYear(publisher.birthYear);
             setIsEditing(true);
             setModalVisible(true);
         }
@@ -293,6 +293,7 @@ const CategoryList = () => {
 
 const styles = StyleSheet.create({
     container: {
+
         flex: 1,
         backgroundColor: '#fff',
     },
@@ -302,6 +303,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     header1: {
+        
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -310,6 +312,7 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     header: {
+       
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -345,7 +348,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#f1f1f1',
         paddingHorizontal: 10,
-        width:"40%",
+        width: "40%",
         borderRadius: 5,
     },
     searchInput: {
