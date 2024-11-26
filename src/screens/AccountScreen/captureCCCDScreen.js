@@ -11,6 +11,7 @@ const CaptureCCCDScreen = () => {
     const { user } = useContext(UserContext); // Lấy thông tin người dùng hiện tại từ UserContext
     const [cccdMatTruoc, setCccdMatTruoc] = useState(null);
     const [cccdMatSau, setCccdMatSau] = useState(null);
+    const [status, setStatus] = useState('Chưa xác định'); // Thêm trạng thái
 
     // Lấy dữ liệu từ Firestore khi render component
     useEffect(() => {
@@ -25,6 +26,7 @@ const CaptureCCCDScreen = () => {
                     const data = userDoc.data();
                     setCccdMatTruoc(data.cccdMatTruoc || null);
                     setCccdMatSau(data.cccdMatSau || null);
+                    setStatus(data.status || 'Chưa xác định'); // Lấy trạng thái và hiển thị
                 }
             } catch (error) {
                 console.error('Error fetching CCCD data: ', error);
@@ -84,55 +86,102 @@ const CaptureCCCDScreen = () => {
                 .update({
                     cccdMatTruoc: cccdMatTruoc,
                     cccdMatSau: cccdMatSau,
+                    status: 'Chờ duyệt',
                     cccdUpdatedAt: firestore.FieldValue.serverTimestamp(),
                 });
 
             Alert.alert('Thành công', 'Dữ liệu CCCD đã được cập nhật.');
             navigation.goBack();
-        } catch (error) {
+        } catch (error) { 
             console.error('Error saving to Firestore: ', error);
             Alert.alert('Lỗi', 'Không thể lưu dữ liệu.');
         }
     };
 
+    // Hàm xóa ảnh cũ khi trạng thái là 'Đã từ chối'
+    const handleReject = async () => {
+        try {
+            // Xóa ảnh cũ từ Firebase Storage
+            if (cccdMatTruoc) {
+                const referenceTruoc = storage().refFromURL(cccdMatTruoc);
+                await referenceTruoc.delete();
+            }
+            if (cccdMatSau) {
+                const referenceSau = storage().refFromURL(cccdMatSau);
+                await referenceSau.delete();
+            }
+
+            // Xóa thông tin hình ảnh trong Firestore
+            await firestore()
+                .collection('NguoiDung')
+                .doc(user.uid)
+                .update({
+                    cccdMatTruoc: null,
+                    cccdMatSau: null,
+                    status: 'Đã từ chối',
+                });
+
+            setCccdMatTruoc(null);
+            setCccdMatSau(null);
+            setStatus('Đã từ chối');
+
+            Alert.alert('Thành công', 'Ảnh đã bị gỡ, vui lòng chụp lại.');
+        } catch (error) {
+            console.error('Error rejecting images: ', error);
+            Alert.alert('Lỗi', 'Không thể gỡ ảnh.');
+        }
+    };
+
     return (
         <View style={styles.container2}>
-        <Text style={styles.title}>Chụp Căn Cước Công Dân</Text>
-        <View style={styles.container}>
+            <Text style={styles.title}>Chụp Căn Cước Công Dân</Text>
+            <View style={styles.container}>
 
-            {/* Chụp mặt trước */}
-            <TouchableOpacity
-                style={styles.captureButton}
-                onPress={() => takeAndUploadPhoto(setCccdMatTruoc)}
-            >
-                <Text style={styles.buttonText}>
-                    {cccdMatTruoc ? 'Chụp lại mặt trước' : 'Chụp mặt trước'}
-                </Text>
-            </TouchableOpacity>
-            {cccdMatTruoc && (
-                <Image source={{ uri: cccdMatTruoc }} style={styles.capturedImage} />
-            )}
-
-            {/* Chụp mặt sau */}
-            <TouchableOpacity
-                style={styles.captureButton}
-                onPress={() => takeAndUploadPhoto(setCccdMatSau)}
-            >
-                <Text style={styles.buttonText}>
-                    {cccdMatSau ? 'Chụp lại mặt sau' : 'Chụp mặt sau'}
-                </Text>
-            </TouchableOpacity>
-            {cccdMatSau && (
-                <Image source={{ uri: cccdMatSau }} style={styles.capturedImage} />
-            )}
-
-            {/* Lưu dữ liệu */}
-            {cccdMatTruoc && cccdMatSau && (
-                <TouchableOpacity style={styles.saveButton} onPress={saveToFirestore}>
-                    <Text style={styles.buttonText}>Lưu và Quay lại</Text>
+                {/* Chụp mặt trước */}
+                <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={() => status !== 'Đã duyệt' && takeAndUploadPhoto(setCccdMatTruoc)} // Không cho chụp khi đã duyệt
+                    disabled={status === 'Đã duyệt'}
+                >
+                    <Text style={styles.buttonText}>
+                        {cccdMatTruoc ? 'Chụp lại mặt trước' : 'Chụp mặt trước'}
+                    </Text>
                 </TouchableOpacity>
-            )}
-        </View>
+                {cccdMatTruoc && (
+                    <Image source={{ uri: cccdMatTruoc }} style={styles.capturedImage} />
+                )}
+
+                {/* Chụp mặt sau */}
+                <TouchableOpacity
+                    style={styles.captureButton}
+                    onPress={() => status !== 'Đã duyệt' && takeAndUploadPhoto(setCccdMatSau)} // Không cho chụp khi đã duyệt
+                    disabled={status === 'Đã duyệt'}
+                >
+                    <Text style={styles.buttonText}>
+                        {cccdMatSau ? 'Chụp lại mặt sau' : 'Chụp mặt sau'}
+                    </Text>
+                </TouchableOpacity>
+                {cccdMatSau && (
+                    <Image source={{ uri: cccdMatSau }} style={styles.capturedImage} />
+                )}
+
+                {/* Hiển thị trạng thái */}
+                <Text style={styles.statusText}>Trạng thái: {status}</Text>
+
+                {/* Nếu trạng thái là "Đã từ chối" thì hiển thị nút gỡ ảnh */}
+                {status === 'Đã từ chối' && (
+                    <TouchableOpacity style={styles.saveButton} onPress={handleReject}>
+                        <Text style={styles.buttonText}>Gỡ ảnh và chụp lại</Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Lưu dữ liệu */}
+                {cccdMatTruoc && cccdMatSau && status !== 'Đã duyệt' && (
+                    <TouchableOpacity style={styles.saveButton} onPress={saveToFirestore}>
+                        <Text style={styles.buttonText}>Lưu và Quay lại</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
     );
 };
@@ -153,7 +202,7 @@ const styles = StyleSheet.create({
         fontSize: 25,
         fontWeight: 'bold',
         marginTop: 30,
-        textAlign:'center',
+        textAlign: 'center',
         color: '#000',
     },
     captureButton: {
@@ -179,6 +228,11 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 15,
         marginTop: 20,
+    },
+    statusText: {
+        fontSize: 18,
+        marginTop: 20,
+        fontWeight: 'bold',
     },
 });
 
