@@ -25,7 +25,8 @@ const ManagerUser = ({navigation}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editUserId, setEditUserId] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
-    const {user} = useContext(UserContext);
+    const {user,matkhau} = useContext(UserContext);
+    //console.log("user",user)
     const [newSpaceUser, setNewSpaceUser] = useState({
         hinh: '',
         hoTen: '',
@@ -82,30 +83,36 @@ const ManagerUser = ({navigation}) => {
 
 
 
-    useEffect(() => {
-        if (user?.maVaiTro && user.maVaiTro !== '1') {
-            // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
-            Alert.alert(
-                "Quyền hạn thay đổi",
-                "Bạn không có quyền truy cập vào màn hình này.",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => navigation.navigate('LoginScreen')
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-    }, [user, navigation]);
+    // useEffect(() => {
+    //     if (user?.maVaiTro && user.maVaiTro !== '1') {
+    //         // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
+    //         Alert.alert(
+    //             "Quyền hạn thay đổi",
+    //             "Bạn không có quyền truy cập vào màn hình này.",
+    //             [
+    //                 {
+    //                     text: "OK",
+    //                     onPress: () => navigation.navigate('LoginScreen')
+    //                 }
+    //             ],
+    //             { cancelable: false }
+    //         );
+    //     }
+    // }, [user, navigation]);
     //Lay thong tin tren firebase xuong
+
     useEffect(() => {
         const unsubscribeNguoiDung = firestore().collection('NguoiDung').onSnapshot(
             snapshot => {
-                const nguoiDungList = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
+                const nguoiDungList = snapshot.docs.map(doc => {
+                    if (doc.id !== user.uid) { // Kiểm tra nếu id khác với user.uid
+                        return {
+                            id: doc.id,
+                            ...doc.data(), // Lấy dữ liệu từ document
+                        };
+                    }
+                    return null; // Trả về null nếu id là của người dùng hiện tại
+                }).filter(item => item !== null);;
                 setNguoiDung(nguoiDungList);
                 setImage(nguoiDung.hinh);
             },
@@ -123,90 +130,60 @@ const ManagerUser = ({navigation}) => {
     // }, [nguoi.hinh]); // Khi nguoi.hinh thay đổi thì gọi setImage
 
     // Hàm tạo người dùng với kiểm tra đầu vào
-    const registerUser = () => {
+    const registerUser = async () => {
+        if (user?.maVaiTro !== '1') { // Kiểm tra nếu không phải admin
+            Alert.alert("Thông báo", "Chỉ admin mới có quyền tạo tài khoản.");
+            return;
+        }
+    
         if (!ten || !email || !mk || !sdt) {
             Alert.alert('Thông báo', 'Vui lòng điền đầy đủ thông tin.');
-            // console.log('Thông báo lỗi: Vui lòng điền đầy đủ thông tin!'); // Dòng kiểm tra
-            // setNotificationType('error');
-            // setNotificationMessage('Vui lòng điền đầy đủ thông tin!');
-            // setShowNotification(false);
             return;
         }
-
-        // Kiểm tra độ mạnh của mật khẩu
+    
         if (mk.length < 6) {
             Alert.alert('Thông báo', 'Mật khẩu phải có ít nhất 6 ký tự.');
-            // console.log('Thông báo lỗi: Mật khẩu phải có ít nhất 6 ký tự.'); // Dòng kiểm tra
-            // setNotificationType('error');
-            // setNotificationMessage('Mật khẩu phải có ít nhất 6 ký tự.');
-            // setShowNotification(false);
             return;
         }
-
-        //Tao nguoi dung
-        {
-        firebase
-            .auth()
-            .createUserWithEmailAndPassword(email, mk)
-            .then(async userCredential => {
-                const user = userCredential.user;
-
-                let imageUrl = image; // URL ảnh hiện tại
-                if (selectedImage) {
-                    imageUrl = await uploadImage(selectedImage);
-                } else {
-                    imageUrl = '';
-                }
-
-                // Lưu thông tin người dùng vào Firestore
-                await firestore().collection('NguoiDung').doc(user.uid).set({
-                    email,
-                    hinh: imageUrl,
-                    hoTen: ten,
-
-                    soDienThoai: sdt,
-                    createdAt: firestore.FieldValue.serverTimestamp(),
-                });
-
-                // Hiển thị thông báo thành công
-                Alert.alert('Thông báo', 'Tạo tài khoản thành công');
-                // setNotificationType('success');
-                // setNotificationMessage('Tạo tài khoản thành công!');
-                // setShowNotification(true);
-
-                // Đặt lại các trường nhập liệu sau khi đăng ký thành công
-                setTen('');
-                setEmail('');
-                setMK('');
-                setSDT('');
-                setIsModalVisible(false);
-            })
-
-            .catch(error => {
-                let message = 'Đăng ký thất bại. Vui lòng thử lại.';
-
-                if (error.code === 'auth/email-already-in-use') {
-                    //message = 'Email đã được sử dụng. Vui lòng chọn email khác.';
-                    Alert.alert('Thông báo', 'Email đã được sử dụng. Vui lòng chọn email khác.');
-                } else if (error.code === 'auth/invalid-email') {
-                    //message = 'Email không hợp lệ.';
-                    Alert.alert('Thông báo', 'Email không hợp lệ.');
-                } else if (error.code === 'auth/weak-password') {
-                    //message = 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.';
-                    Alert.alert('Thông báo', 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.');
-                }
-                // console.log(`Thông báo lỗi: ${message}`); // Dòng kiểm tra
-                // setNotificationType('error');
-                // setNotificationMessage(message);
-                // setShowNotification(true);
-            })
-            .finally(() => {
-                //Đảm bảo rằng modal chỉ đóng khi quá trình đăng ký thành công
-                //setIsModalVisible(false); // Đừng gọi ở đây!
+    
+        const currentUser = firebase.auth().currentUser; // Lưu thông tin tài khoản admin hiện tại
+        console.log(currentUser);
+        try {
+            // Tạo tài khoản mới
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, mk);
+            const newUser = userCredential.user;
+    
+            // Tải ảnh lên Firestore (nếu có)
+            let imageUrl = image;
+            if (selectedImage) {
+                imageUrl = await uploadImage(selectedImage);
+            }
+    
+            // Thêm thông tin người dùng vào Firestore
+            await firestore().collection('NguoiDung').doc(newUser.uid).set({
+                email,
+                hinh: imageUrl || '',
+                hoTen: ten,
+                maVaiTro: "2", // Vai trò mặc định là người dùng
+                soDienThoai: sdt,
+                createdAt: firestore.FieldValue.serverTimestamp(),
             });
+    
+            // Đăng xuất tài khoản vừa tạo
+            await firebase.auth().signOut();
+    
+            // Đăng nhập lại tài khoản admin
+            await firebase.auth().signInWithEmailAndPassword(currentUser.email, matkhau);
+    
+            Alert.alert('Thông báo', 'Tạo tài khoản thành công.');
+            resetForm();
+            setIsModalVisible(false);
+        } catch (error) {
+            console.error('Lỗi tạo tài khoản:', error);
+            Alert.alert('Thông báo', 'Tạo tài khoản thất bại. Vui lòng thử lại.');
         }
-
     };
+    
 
 
 
@@ -229,26 +206,48 @@ const ManagerUser = ({navigation}) => {
     //Chan nguoi dung
     const handleBlock = async (nguoi) => {
         const userId = nguoi.id;
-
+    
         // Kiểm tra xem người dùng có tồn tại không
         if (!userId) {
             Alert.alert('Thông báo', 'Không tìm thấy ID người dùng.');
             return;
         }
-
+    
         try {
-            // Cập nhật vai trò người dùng thành "6" (bị chặn) trực tiếp
+            // Lấy thông tin người dùng từ Firestore để kiểm tra maVaiTro hiện tại
+            const userDoc = await firestore().collection('NguoiDung').doc(userId).get();
+    
+            if (!userDoc.exists) {
+                Alert.alert('Thông báo', 'Người dùng không tồn tại.');
+                return;
+            }
+    
+            const userData = userDoc.data();
+            const currentRole = userData.maVaiTro;
+    
+            // Kiểm tra nếu maVaiTro là 6, thì khôi phục maVaiTro cũ
+            let newRole;
+            if (currentRole === "6") {
+                // Nếu maVaiTro = 6, khôi phục giá trị maVaiTro cũ
+                newRole = userData.previousRole || "1"; // Gán lại giá trị trước đó, nếu không có previousRole thì gán mặc định là 1
+            } else {
+                // Nếu maVaiTro không phải 6, gán thành 6
+                newRole = "6";
+            }
+    
+            // Cập nhật vai trò người dùng
             await firestore()
                 .collection('NguoiDung')
                 .doc(userId)
                 .update({
-                    maVaiTro: 6,
+                    maVaiTro: newRole,
+                    previousRole: currentRole, // Lưu giá trị maVaiTro cũ vào previousRole
                 });
-
+    
             // Thông báo chặn thành công
-            Alert.alert('Thông báo', 'Chặn người dùng thành công!');
-
-            // Làm mới danh sách người dùng sau khi chặn (nếu cần)
+            Alert.alert('Thông báo', currentRole === "6" ? 'Bỏ chặn thành công!' : 'Chặn thành công!');
+    
+            // Làm mới danh sách người dùng sau khi thay đổi (nếu cần)
             const unsubscribeNguoiDung = firestore().collection('NguoiDung').onSnapshot(
                 snapshot => {
                     const nguoiDungList = snapshot.docs.map(doc => ({
@@ -261,13 +260,15 @@ const ManagerUser = ({navigation}) => {
                     console.error('Error fetching Firestore data: ', error);
                 }
             );
-
+    
         } catch (error) {
             // Nếu có lỗi trong quá trình cập nhật
             Alert.alert('Thông báo', 'Chặn người dùng thất bại. Vui lòng thử lại.');
             console.error('Lỗi khi chặn người dùng:', error);
         }
     };
+    
+    
 
 
     // Refesh
@@ -278,7 +279,6 @@ const ManagerUser = ({navigation}) => {
         setNewSpaceUser({
             hinh: '',
             hoTen: ten,
-            maVaiTro: '2',
             soDienThoai: sdt,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
@@ -314,7 +314,6 @@ const ManagerUser = ({navigation}) => {
                     email,
                     hinh: imageUrl,
                     soDienThoai: sdt,
-                    maVaiTro: '2',
                 });
 
             Alert.alert('Thông báo', 'Cập nhật người dùng thành công!');
@@ -349,7 +348,7 @@ const ManagerUser = ({navigation}) => {
     //Lay thong tin tai ten
     const filteredUser = nguoiDung
         .filter(nguoi => nguoi.hoTen?.toLowerCase().includes(searchText?.toLowerCase() || ""));
-    //.filter((nguoi) => nguoi.maVaiTro !== 6); hello bro
+
 
     return (
         <View style={styles.container}>
@@ -394,7 +393,8 @@ const ManagerUser = ({navigation}) => {
                                             </TouchableOpacity>
                                             <TouchableOpacity style={styles.buttonRed} onPress={() => handleBlock(nguoi)}>
                                                 <Image style={styles.icon1} source={require('../../assets/ChanTK.png')} />
-                                                <Text style={styles.buttonText}>Chặn tài khoản</Text>
+                                                <Text style={styles.buttonText}>{(nguoi.maVaiTro !== "6" && "Chặn tài khoản") || 
+                                                (nguoi.maVaiTro === "6" && "Bỏ chặn")}</Text>
                                             </TouchableOpacity>
                                         </View>
                                     )}

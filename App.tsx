@@ -12,12 +12,17 @@ import PaymentScreen from './src/screens/PaymentScreen/index.js';
 import AdminCatagoryScreen from './src/screens/TheloaiScreen/theloai.js';
 import AdminDecentScreen from './src/screens/PhanquyenScreen/danhsachnguoidung.js';
 import BookManagementScreen from './src/screens/BookManagementScreen/BookManagement.js';
+import TransactionhistoryScreen from './src/screens/TransactionhistoryScreen/transactionhistory.js';
 import UserManagerScreen from './src/screens/UserManagerScreen/UserManager.js';
+import StatisticalScreen from './src/screens/StatisticalScreen/statistical.js';
+
 import OrderListScreen from './src/screens/OrderListScreen/index.js';
 import RatingScreen from './src/screens/RatingScreen/ratingScreen.js';
 import RatingDoScreen from './src/screens/RatingDoScreen/ratingDoScreen.js';
 import LoadingScreen from './src/screens/LoadingScreen/LoadingScreen.js';
 import PushLanguagesToFirestore from './src/pushLanguagesToFirestore.js';
+import MyOder from './src/screens/Shipper/MyOder.js';
+import OderDelivery from './src/screens/Shipper/OrderDelivered.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -38,10 +43,14 @@ export default function App() {
           <Stack.Screen name="BookManagementScreen" component={BookManagementScreen} />
           <Stack.Screen name="AuthorManagementScreen" component={AuthorManagementScreen} />
           <Stack.Screen name="UserManagerScreen" component={UserManagerScreen} />
+          <Stack.Screen name="TransactionhistoryScreen" component={TransactionhistoryScreen} />
+          <Stack.Screen name="StatisticalScreen" component={StatisticalScreen}/>
           <Stack.Screen name="RatingScreen" component={RatingScreen} />
           <Stack.Screen name="RatingDoScreen" component={RatingDoScreen} />
           <Stack.Screen name="OrderListScreen" component={OrderListScreen} />
           <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
+          <Stack.Screen name="MyOder" component={MyOder} />
+          <Stack.Screen name="OderDelivery" component={OderDelivery} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
