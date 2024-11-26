@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal, LayoutAnimation, Platform, UIManager } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import firestore from '@react-native-firebase/firestore';
@@ -8,7 +8,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import NavbarCard from '../../components/NavbarCard';
 import NotificationCard from '../../components/NotificationCard';
 import { UserContext } from '../../context/UserContext';
-const ManagerUser = ({navigation}) => {
+const ManagerUser = ({ navigation }) => {
     const [nguoiDung, setNguoiDung] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [image, setImage] = useState('');
@@ -25,7 +25,7 @@ const ManagerUser = ({navigation}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editUserId, setEditUserId] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
-    const {user,matkhau} = useContext(UserContext);
+    const { user, matkhau } = useContext(UserContext);
     //console.log("user",user)
     const [newSpaceUser, setNewSpaceUser] = useState({
         hinh: '',
@@ -135,30 +135,30 @@ const ManagerUser = ({navigation}) => {
             Alert.alert("Thông báo", "Chỉ admin mới có quyền tạo tài khoản.");
             return;
         }
-    
+
         if (!ten || !email || !mk || !sdt) {
             Alert.alert('Thông báo', 'Vui lòng điền đầy đủ thông tin.');
             return;
         }
-    
+
         if (mk.length < 6) {
             Alert.alert('Thông báo', 'Mật khẩu phải có ít nhất 6 ký tự.');
             return;
         }
-    
+
         const currentUser = firebase.auth().currentUser; // Lưu thông tin tài khoản admin hiện tại
         console.log(currentUser);
         try {
             // Tạo tài khoản mới
             const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, mk);
             const newUser = userCredential.user;
-    
+
             // Tải ảnh lên Firestore (nếu có)
             let imageUrl = image;
             if (selectedImage) {
                 imageUrl = await uploadImage(selectedImage);
             }
-    
+
             // Thêm thông tin người dùng vào Firestore
             await firestore().collection('NguoiDung').doc(newUser.uid).set({
                 email,
@@ -168,13 +168,13 @@ const ManagerUser = ({navigation}) => {
                 soDienThoai: sdt,
                 createdAt: firestore.FieldValue.serverTimestamp(),
             });
-    
+
             // Đăng xuất tài khoản vừa tạo
             await firebase.auth().signOut();
-    
+
             // Đăng nhập lại tài khoản admin
             await firebase.auth().signInWithEmailAndPassword(currentUser.email, matkhau);
-    
+
             Alert.alert('Thông báo', 'Tạo tài khoản thành công.');
             resetForm();
             setIsModalVisible(false);
@@ -183,7 +183,7 @@ const ManagerUser = ({navigation}) => {
             Alert.alert('Thông báo', 'Tạo tài khoản thất bại. Vui lòng thử lại.');
         }
     };
-    
+
 
 
 
@@ -202,29 +202,63 @@ const ManagerUser = ({navigation}) => {
         console.log('sdt: ', nguoi.soDienThoai);
     };
 
+    const handleDuyet = (nguoi) => {
+        // Cập nhật trạng thái của người dùng thành "Đã duyệt"
+        const updatedUser = { status: 'Đã duyệt' };
+
+        // Cập nhật Firestore
+        firebase.firestore().collection('NguoiDung').doc(nguoi.id)  // Dùng ID người dùng để xác định tài liệu
+            .update(updatedUser)
+            .then(() => {
+                alert('Cập nhật trạng thái thành công: Đã duyệt');
+                // Bạn có thể thêm logic hiển thị thông báo hoặc làm mới danh sách người dùng ở đây
+            })
+            .catch((error) => {
+                console.error('Lỗi khi cập nhật trạng thái: ', error);
+                Alert.alert('Thông báo', 'Cập nhật trạng thái thất bại. Vui lòng thử lại!');
+            });
+    };
+
+    const handleTuChoi = (nguoi) => {
+        // Cập nhật trạng thái của người dùng thành "Đã từ chối"
+        const updatedUser = { status: 'Đã từ chối' };
+
+        // Cập nhật Firestore
+        firebase.firestore().collection('NguoiDung').doc(nguoi.id)  // Dùng ID người dùng để xác định tài liệu
+            .update(updatedUser)
+            .then(() => {
+                alert('Cập nhật trạng thái thành công: Đã từ chối');
+                // Bạn có thể thêm logic hiển thị thông báo hoặc làm mới danh sách người dùng ở đây
+            })
+            .catch((error) => {
+                console.error('Lỗi khi cập nhật trạng thái: ', error);
+                Alert.alert('Thông báo', 'Cập nhật trạng thái thất bại. Vui lòng thử lại!');
+            });
+    };
+
 
     //Chan nguoi dung
     const handleBlock = async (nguoi) => {
         const userId = nguoi.id;
-    
+
         // Kiểm tra xem người dùng có tồn tại không
         if (!userId) {
             Alert.alert('Thông báo', 'Không tìm thấy ID người dùng.');
             return;
         }
-    
+
         try {
             // Lấy thông tin người dùng từ Firestore để kiểm tra maVaiTro hiện tại
             const userDoc = await firestore().collection('NguoiDung').doc(userId).get();
-    
+
             if (!userDoc.exists) {
                 Alert.alert('Thông báo', 'Người dùng không tồn tại.');
                 return;
             }
-    
+
             const userData = userDoc.data();
             const currentRole = userData.maVaiTro;
-    
+
             // Kiểm tra nếu maVaiTro là 6, thì khôi phục maVaiTro cũ
             let newRole;
             if (currentRole === "6") {
@@ -234,7 +268,7 @@ const ManagerUser = ({navigation}) => {
                 // Nếu maVaiTro không phải 6, gán thành 6
                 newRole = "6";
             }
-    
+
             // Cập nhật vai trò người dùng
             await firestore()
                 .collection('NguoiDung')
@@ -243,10 +277,10 @@ const ManagerUser = ({navigation}) => {
                     maVaiTro: newRole,
                     previousRole: currentRole, // Lưu giá trị maVaiTro cũ vào previousRole
                 });
-    
+
             // Thông báo chặn thành công
             Alert.alert('Thông báo', currentRole === "6" ? 'Bỏ chặn thành công!' : 'Chặn thành công!');
-    
+
             // Làm mới danh sách người dùng sau khi thay đổi (nếu cần)
             const unsubscribeNguoiDung = firestore().collection('NguoiDung').onSnapshot(
                 snapshot => {
@@ -260,15 +294,15 @@ const ManagerUser = ({navigation}) => {
                     console.error('Error fetching Firestore data: ', error);
                 }
             );
-    
+
         } catch (error) {
             // Nếu có lỗi trong quá trình cập nhật
             Alert.alert('Thông báo', 'Chặn người dùng thất bại. Vui lòng thử lại.');
             console.error('Lỗi khi chặn người dùng:', error);
         }
     };
-    
-    
+
+
 
 
     // Refesh
@@ -367,42 +401,97 @@ const ManagerUser = ({navigation}) => {
                 </View>
 
                 <ScrollView>
-                    {filteredUser.map((nguoi) => ( 
-                        <TouchableOpacity key={nguoi.id} style={styles.khungItem} onPress={() => {toggleExpand(nguoi.id)}}>
-                            <View style={{ flexDirection: "row" }}>
-                                {nguoi.hinh ? (
-                                    <Image source={{ uri: nguoi.hinh }} style={styles.anh} />
-                                    
-                                ) : (
-                                    <Image source={require('../../assets/default.png')} style={styles.anh} />
-                                )}
-                                <View style={styles.thongTin}>
-                                    <Text style={styles.thongtin1}>Tên: {nguoi.hoTen}</Text>
-                                    <Text style={styles.thongtin1}>Email: {nguoi.email}</Text>
-                                    <Text style={styles.thongtin1}>SDT: {nguoi.soDienThoai}</Text>
+  {filteredUser.map((nguoi) => (
+    <TouchableOpacity key={nguoi.id} style={styles.khungItem} onPress={() => { toggleExpand(nguoi.id) }}>
+      <View style={{ flexDirection: "row" }}>
+        {nguoi.hinh ? (
+          <Image source={{ uri: nguoi.hinh }} style={styles.anh} />
+        ) : (
+          <Image source={require('../../assets/default.png')} style={styles.anh} />
+        )}
+        <View style={styles.thongTin}>
+          <Text style={styles.thongtin1}>Tên: {nguoi.hoTen}</Text>
+          <Text style={styles.thongtin1}>Email: {nguoi.email}</Text>
+          <Text style={styles.thongtin1}>SDT: {nguoi.soDienThoai}</Text>
 
-                                    {expandedUserId === nguoi.id && (
-                                        <View style={styles.expandedDetails}>
-                                            <TouchableOpacity style={styles.buttonGreen}>
-                                                <Image style={styles.icon1} source={require('../../assets/XemDH.png')} />
-                                                <Text style={styles.buttonText}>Xem đơn hàng</Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity style={styles.buttonGray} onPress={() => handleEditUser(nguoi)}>
-                                                <Image style={styles.icon1} source={require('../../assets/SuaTT.png')} />
-                                                <Text style={styles.buttonText}>Sửa thông tin</Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity style={styles.buttonRed} onPress={() => handleBlock(nguoi)}>
-                                                <Image style={styles.icon1} source={require('../../assets/ChanTK.png')} />
-                                                <Text style={styles.buttonText}>{(nguoi.maVaiTro !== "6" && "Chặn tài khoản") || 
-                                                (nguoi.maVaiTro === "6" && "Bỏ chặn")}</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    )}
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+          {expandedUserId === nguoi.id && (
+            <View style={styles.expandedDetails}>
+              {/* Chức năng xem đơn hàng */}
+              <TouchableOpacity style={styles.buttonGreen}>
+                <Image style={styles.icon1} source={require('../../assets/XemDH.png')} />
+                <Text style={styles.buttonText}>Xem đơn hàng</Text>
+              </TouchableOpacity>
+
+              {/* Chức năng sửa thông tin */}
+              <TouchableOpacity style={styles.buttonGray} onPress={() => handleEditUser(nguoi)}>
+                <Image style={styles.icon1} source={require('../../assets/SuaTT.png')} />
+                <Text style={styles.buttonText}>Sửa thông tin</Text>
+              </TouchableOpacity>
+
+              {/* Kiểm tra mã vai trò của người dùng là 3 hoặc 4 */}
+              {(nguoi.maVaiTro === '3' || nguoi.maVaiTro === '4') && (
+                <>
+                  {/* Kiểm tra nếu người dùng có CCCD */}
+                  {nguoi.cccdMatTruoc && nguoi.cccdMatSau ? (
+                    <>
+                      {/* Kiểm tra người dùng có phải là admin hay không */}
+                      {user && user.maVaiTro === "1" && (
+                        <>
+                          <TouchableOpacity style={styles.buttonOrange} onPress={() => handleDuyet(nguoi)}>
+                            <Image style={styles.icon1} source={require('../../assets/accept.png')} />
+                            <Text style={styles.buttonText}>Duyệt</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity style={styles.buttonPurpure} onPress={() => handleTuChoi(nguoi)}>
+                            <Image style={styles.icon1} source={require('../../assets/deny.png')} />
+                            <Text style={styles.buttonText}>Từ chối</Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {/* Nếu không có CCCD, khi bấm sẽ thông báo */}
+                      <TouchableOpacity
+                        style={styles.buttonOrange}
+                        onPress={() => {
+                          Alert.alert('Thông báo', 'Người dùng chưa cập nhật CCCD.');
+                        }}
+                      >
+                        <Image style={styles.icon1} source={require('../../assets/accept.png')} />
+                        <Text style={styles.buttonText}>Duyệt</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.buttonPurpure}
+                        onPress={() => {
+                          Alert.alert('Thông báo', 'Người dùng chưa cập nhật CCCD.');
+                        }}
+                      >
+                        <Image style={styles.icon1} source={require('../../assets/deny.png')} />
+                        <Text style={styles.buttonText}>Từ chối</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Chức năng chặn tài khoản */}
+              <TouchableOpacity style={styles.buttonRed} onPress={() => handleBlock(nguoi)}>
+                <Image style={styles.icon1} source={require('../../assets/ChanTK.png')} />
+                <Text style={styles.buttonText}>
+                  {(nguoi.maVaiTro !== "6" && "Chặn tài khoản") ||
+                    (nguoi.maVaiTro === "6" && "Bỏ chặn")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
+
 
                 <TouchableOpacity onPress={toggleAdd}>
                     <Image style={styles.icon2} source={require('../../assets/ThemND.png')} />
@@ -569,6 +658,20 @@ const styles = StyleSheet.create({
     },
     buttonGreen: {
         backgroundColor: '#0AEE57',
+        paddingVertical: 10,
+        borderRadius: 5,
+        marginVertical: 5,
+        flexDirection: 'row'
+    },
+    buttonOrange: {
+        backgroundColor: '#fc9003',
+        paddingVertical: 10,
+        borderRadius: 5,
+        marginVertical: 5,
+        flexDirection: 'row'
+    },
+    buttonPurpure: {
+        backgroundColor: '#b16dc2',
         paddingVertical: 10,
         borderRadius: 5,
         marginVertical: 5,
