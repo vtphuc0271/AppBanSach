@@ -29,12 +29,12 @@ const TrangChuScreen = () => {
   const [theLoai, setGenres] = useState([]);
   const [ngonNgu, setNgonNgu] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const { user } = useContext(UserContext);
+  const { user,matkhau } = useContext(UserContext);
   const [data, setData] = useState([]);
   const [purchasedBooks, setPurchasedBooks] = useState([]);
 
-  //console.log('day la user: ', user);
-
+  console.log('day la user: ', user);
+  console.log('day la matkhau: ', matkhau);
   const toggleFilter = () => {
     setFilterItem(!filterItem);
     if (sortItem == true) {

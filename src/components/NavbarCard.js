@@ -19,9 +19,11 @@ import { useEffect } from 'react';
 // Thêm các import cần thiết cho Firestore
 import firestore from '@react-native-firebase/firestore';
 
+
 const NarbarCard = ({ ScreenName, iconShop = false }) => {
   const navigation = useNavigation();
-  const { user } = useContext(UserContext);
+  const { user,setMK,matkhau } = useContext(UserContext);
+  console.log(matkhau)
   const [isMenuVisible, setMenuVisible] = useState(false);
 
   const [showNotification, setShowNotification] = useState(false);
@@ -94,6 +96,7 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
       setNotificationType('success');
       setNotificationMessage('Bạn đã đăng xuất thành công!');
       setShowNotification(true);
+      setMK([]);
       setTimeout(() => {
         navigation.navigate('MainScreen');
         closeMenu();
@@ -220,7 +223,10 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               {/* menu shipper/nhân viên */}
               {(user && user.maVaiTro === '4') ||
                 (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent} 
+                onPress={() => {navigation.navigate('MyOder');
+                  closeMenu();
+                }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenudonhang.png')}
@@ -244,7 +250,10 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               ) : null}
               {(user && user.maVaiTro === '4') ||
                 (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent} 
+                onPress={() => {navigation.navigate('OderDelivery');
+                closeMenu();
+              }}>
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenudanhsachdonhangcangiao.png')}

@@ -18,6 +18,8 @@ import RatingScreen from './src/screens/RatingScreen/ratingScreen.js';
 import RatingDoScreen from './src/screens/RatingDoScreen/ratingDoScreen.js';
 import LoadingScreen from './src/screens/LoadingScreen/LoadingScreen.js';
 import PushLanguagesToFirestore from './src/pushLanguagesToFirestore.js';
+import MyOder from './src/screens/Shipper/MyOder.js';
+import OderDelivery from './src/screens/Shipper/OrderDelivered.js';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -42,6 +44,8 @@ export default function App() {
           <Stack.Screen name="RatingDoScreen" component={RatingDoScreen} />
           <Stack.Screen name="OrderListScreen" component={OrderListScreen} />
           <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
+          <Stack.Screen name="MyOder" component={MyOder} />
+          <Stack.Screen name="OderDelivery" component={OderDelivery} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

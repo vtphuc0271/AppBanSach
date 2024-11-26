@@ -8,9 +8,9 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [matkhau, setMK] = useState(null);
 
   useEffect(() => {
-    // Kiểm tra xem người dùng đã đăng nhập hay chưa
     const checkUser = async () => {
       const storedUser = await AsyncStorage.getItem('user');
       if (storedUser) {
@@ -18,12 +18,12 @@ export const UserProvider = ({ children }) => {
       }
     };
 
-    checkUser(); // Kiểm tra khi component được mount
+    checkUser();
 
     const unsubscribe = firebase.auth().onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
         const userDocRef = firebase.firestore().collection('NguoiDung').doc(currentUser.uid);
-        
+
         // Sử dụng onSnapshot để cập nhật khi document thay đổi
         const unsubscribeDoc = userDocRef.onSnapshot(docSnapshot => {
           if (docSnapshot.exists) {
@@ -37,6 +37,7 @@ export const UserProvider = ({ children }) => {
               maVaiTro: userData.maVaiTro || "",
               diaChi: userData.diaChi || "",
               soDienThoai: userData.soDienThoai || "",
+              mk: "" // Thêm thuộc tính mk vào user
             };
 
             setUser(updatedUser);
@@ -49,8 +50,7 @@ export const UserProvider = ({ children }) => {
         }, error => {
           console.error("Error fetching user data: ", error);
         });
-  
-        // Cleanup khi unmount
+
         return () => unsubscribeDoc();
       } else {
         setUser(null);
@@ -61,8 +61,9 @@ export const UserProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+
   return (
-    <UserContext.Provider value={{ user }}>
+    <UserContext.Provider value={{ user, matkhau, setMK }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useContext} from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import '@react-native-firebase/firestore';
 import NotificationCard from '../../components/NotificationCard';
 import { useNavigation } from '@react-navigation/native';
 import NavbarCard from '../../components/NavbarCard';
+import {UserContext} from '../../context/UserContext';
 
 export default function App() {
   const navigation = useNavigation();
@@ -22,6 +23,8 @@ export default function App() {
   const [notificationType, setNotificationType] = useState('');
   const [notificationMessage, setNotificationMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const {setMK} = useContext(UserContext);
+
 
   const loginUser = (email, password) => {
     setLoading(true);
@@ -69,6 +72,7 @@ export default function App() {
         setNotificationType('success');
         setNotificationMessage('Bạn đã đăng nhập thành công!');
         setShowNotification(true);
+        setMK(password);
         setTimeout(() => {
           navigation.navigate('MainScreen');
         }, 1000);
