@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, Alert, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import CheckBox from '@react-native-community/checkbox';
@@ -8,7 +8,7 @@ import storage from '@react-native-firebase/storage';
 import NavbarCard from '../../components/NavbarCard';
 import { UserContext } from '../../context/UserContext';
 
-const BookManagement = ({navigation}) => {
+const BookManagement = ({ navigation }) => {
   const [Sach, setBooks] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -27,12 +27,17 @@ const BookManagement = ({navigation}) => {
     namXuatBan: '',
     giaTien: '',
     anhSach: '',
+    lanIn: '',
+    ngonNgu: '',
+    phan: '',
+    giaNhap:'',
   });
 
   const [tacGia, setAuthors] = useState([]);
   const [theLoai, setGenres] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const {user} = useContext(UserContext);
+  const [ngonNgu, setNgonNgu] = useState([]);
+  const { user } = useContext(UserContext);
   useEffect(() => {
     if (user?.maVaiTro && user.maVaiTro !== '1') {
       // Nếu vai trò khác "1", hiển thị thông báo và điều hướng về MainScreen
@@ -80,6 +85,20 @@ const BookManagement = ({navigation}) => {
       }
     );
 
+    // Lấy dữ liệu ngon ngu
+    const unsubscribeNgonNgu = firestore().collection('languages').onSnapshot(
+      snapshot => {
+        const ngonNgu = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+        }));
+        setNgonNgu(ngonNgu);
+      },
+      error => {
+        console.error('Error fetching authors: ', error);
+      }
+    );
+
     // Lấy dữ liệu thể loại
     const unsubscribeGenres = firestore().collection('TheLoai').onSnapshot(
       snapshot => {
@@ -114,29 +133,40 @@ const BookManagement = ({navigation}) => {
       unsubscribeAuthors();
       unsubscribeGenres();
       unsubscribePublishers();
+      unsubscribeNgonNgu();
     };
   }, []);
 
   const handleAddNew = async () => {
-    if (newBook.tenSach && newBook.tacGia) {
+    if (newBook.tenSach && newBook.tacGia && newBook.giaNhap) {
+      // Tính lại giaTien khi giaNhap được nhập
+      const giaNhap = parseFloat(newBook.giaNhap);
+      let giaTien = (giaNhap + 10000 + 5000) / 0.8;
+  
+      // Làm tròn giaTien đến bội số gần nhất của 1000
+      giaTien = Math.round(giaTien / 1000) * 1000;
+  
+      // Cập nhật giaTien vào newBook
+      const newBookWithPrice = { ...newBook, giaTien: giaTien, isTop: true, displayed: true };
+  
+      // Thêm sách mới vào Firestore
       await firestore()
         .collection('Sach')
-        .add({
-          ...newBook,
-          isTop: true,
-          displayed: true,
-        })
+        .add(newBookWithPrice)
         .then(() => {
           console.log('Book added!');
         })
         .catch(error => {
           console.error('Error adding book: ', error);
         });
+  
       resetNewBook();
     } else {
       Alert.alert('Thông báo', 'Vui lòng điền đầy đủ thông tin.');
     }
   };
+  
+  
 
   const handleAddNewAuthor = async () => {
     if (newAuthorName.trim() === '') {
@@ -169,23 +199,35 @@ const BookManagement = ({navigation}) => {
 
   const handleEditBook = async () => {
     if (newBook.tenSach && newBook.tacGia) {
+      // Tính lại giaTien khi giaNhap thay đổi
+      const giaNhap = parseFloat(newBook.giaNhap);
+      let giaTien = (giaNhap + 10000 + 5000) / 0.8;
+      
+      // Làm tròn giaTien đến bội số gần nhất của 1000
+      giaTien = Math.round(giaTien / 1000) * 1000;
+  
+      // Cập nhật giaTien vào newBook
+      const updatedBook = { ...newBook, giaTien: giaTien };
+  
+      // Cập nhật thông tin sách lên Firestore
       await firestore()
         .collection('Sach')
         .doc(editBookId)
-        .update({
-          ...newBook,
-        })
+        .update(updatedBook)
         .then(() => {
           console.log('Book edited!');
         })
         .catch(error => {
           console.error('Error editing book: ', error);
         });
+      
       resetNewBook();
     } else {
       Alert.alert('Thông báo', 'Vui lòng điền đầy đủ thông tin.');
     }
   };
+  
+  
 
   const resetNewBook = () => {
     setModalVisible(false);
@@ -200,6 +242,10 @@ const BookManagement = ({navigation}) => {
       namXuatBan: '',
       giaTien: '',
       anhSach: '',
+      lanIn: '',
+      ngonNgu: '',
+      phan: '',
+      giaNhap:'',
     });
   };
 
@@ -233,29 +279,35 @@ const BookManagement = ({navigation}) => {
     book.tenSach?.toLowerCase().includes(searchText?.toLowerCase() || "")
   );
 
-  const renderPicker = (label, selectedValue, setValue, items) => (
-    <View style={{ flexDirection: 'column', flex: 1 }}>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedValue}
-          style={styles.picker}
-          onValueChange={setValue}
-          mode="dropdown"
-          dropdownIconColor="black"
-        >
-          <Picker.Item label={`${label}`} value="" />
-          {items.map(item => (
-            <Picker.Item
-              key={item.id}
-              label={item.name}
-              value={item.id}
-              color="#000"
-            />
-          ))}
-        </Picker>
+  const renderPicker = (label, selectedValue, setValue, items) => {
+    // Sắp xếp các mục theo thứ tự A - Z
+    const sortedItems = items.sort((a, b) => a.name.localeCompare(b.name));
+    
+    return (
+      <View style={{ flexDirection: 'column', flex: 1 }}>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={selectedValue}
+            style={styles.picker}
+            onValueChange={setValue}
+            mode="dropdown"
+            dropdownIconColor="black"
+          >
+            <Picker.Item label={`${label}`} value="" />
+            {sortedItems.map(item => (
+              <Picker.Item
+                key={item.id}
+                label={item.name}
+                value={item.id}
+                color="#000"
+              />
+            ))}
+          </Picker>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+  
 
 
   const selectImage = () => {
@@ -281,6 +333,10 @@ const BookManagement = ({navigation}) => {
       }
     });
   };
+  
+  const calculateGiaTien = (giaNhap) => {
+    return (giaNhap + 10000 + 5000) / 0.8;
+  }
 
   const selectAuthorImage = () => {
     const options = {
@@ -445,12 +501,31 @@ const BookManagement = ({navigation}) => {
                     keyboardType="numeric"
                   />
                 </View>
+                <View style={{ flexDirection: 'row' }}>
+                  <TextInput
+                    placeholder="Lần in"
+                    placeholderTextColor="#aaa"
+                    style={styles.input}
+                    value={newBook.lanIn}
+                    onChangeText={text => setNewBook({ ...newBook, lanIn: text })}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    placeholder="Phần"
+                    placeholderTextColor="#aaa"
+                    style={[styles.input, { marginHorizontal: 10 }]}
+                    value={newBook.phan}
+                    onChangeText={text => setNewBook({ ...newBook, phan: text })}
+                    keyboardType="numeric"
+                  />
+                  {renderPicker('Ngôn ngữ', newBook.ngonNgu, itemValue => setNewBook({ ...newBook, ngonNgu: itemValue }), ngonNgu)}
+                </View>
                 <TextInput
-                  placeholder="Giá tiền"
+                  placeholder="Giá Nhập"
                   placeholderTextColor="#aaa"
                   style={styles.input}
-                  value={newBook.giaTien}
-                  onChangeText={text => setNewBook({ ...newBook, giaTien: text })}
+                  value={newBook.giaNhap}
+                  onChangeText={text => setNewBook({ ...newBook, giaNhap: text })}
                   keyboardType="numeric"
                 />
                 <View style={{ alignItems: 'center' }}>

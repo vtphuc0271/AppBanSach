@@ -8,7 +8,6 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import NavbarCard from '../../components/NavbarCard';
 import NotificationCard from '../../components/NotificationCard';
 import { UserContext } from '../../context/UserContext';
-
 const ManagerUser = ({navigation}) => {
     const [nguoiDung, setNguoiDung] = useState([]);
     const [searchText, setSearchText] = useState('');
@@ -164,7 +163,7 @@ const ManagerUser = ({navigation}) => {
                     email,
                     hinh: imageUrl,
                     hoTen: ten,
-                    maVaiTro: '2',
+
                     soDienThoai: sdt,
                     createdAt: firestore.FieldValue.serverTimestamp(),
                 });

@@ -195,9 +195,9 @@ const CategoryList = ({ navigation }) => {
               onChangeText={setSearchText}
             />
             <Image
-              source={require('../../assets/iconsearch.png')}
-              style={styles.searchIcon}
-            />
+                source={require('../../assets/iconsearch.png')}
+                style={styles.searchIcon}
+              />
           </View>
         </View>
         <View style={styles.listHeader}>
@@ -272,7 +272,7 @@ const CategoryList = ({ navigation }) => {
                 ) : (
                   <Image
                     source={require('../../assets/default.png')}
-                    style={{ width: 100, height: 100, margin: 10 }}
+                    style={{width: 100, height: 100, margin: 10}}
                   />
                 )}
               </TouchableOpacity>
