@@ -16,6 +16,8 @@ import {
   confirmPayment,
   approveOrder,
   orderNotEnough,
+  getDonHangBiHuyData,
+  getDonHangThanhCong,
 } from '../../services/orderService';
 import firestore from '@react-native-firebase/firestore';
 import {getBookById} from '../../services/bookService';
@@ -44,11 +46,12 @@ const OrderListScreen = () => {
   console.log('orders', orders);
   //console.log('selectedOrder', selectedOrder);
   //console.log('chitietOrders', chitietOrders);
-  //console.log('donHangShiperWithUsers', donHangShiperWithUsers);
+  console.log('donHangShiperWithUsers', donHangShiperWithUsers);
   useEffect(() => {
     let unsubscribe;
     setDonHangShiperWithUsers([]);
-    if (selectedTab == 2) {
+
+    if (selectedTab == 2 || selectedTab == 3) {
       unsubscribe = listenToDonHangShiperWithUsers();
     }
 
@@ -80,22 +83,31 @@ const OrderListScreen = () => {
         unsubscribe = getDonHangData(
           selectedTab,
           donHangList => {
-            // Kết hợp dữ liệu từ donHangShiperWithUsers
-            const combinedData = donHangList.map(order => {
-              const shipperData = donHangShiperWithUsers.find(
-                shipper => shipper.id === order.id,
-              );
-              return {
-                ...order,
-                shipperid: shipperData?.parentId || '',
-                shipperName: shipperData?.userName || 'Chưa có Shiper nhận',
-                shipperPhone:
-                  shipperData?.userPhone || 'Không có số điện thoại',
-                tinhTrangDonHangShiper: shipperData?.tinhTrangDonHangShiper,
-              };
-            });
-
-            setOrders(combinedData);
+            // Không cần kết hợp với donHangShiperWithUsers nữa
+            setOrders(donHangList);
+            setIsLoading(false);
+          },
+          error => {
+            setOrders([]);
+            setIsLoading(false);
+          },
+        );
+      } else if (selectedTab == 4) {
+        unsubscribe = getDonHangBiHuyData(
+          donHangList => {
+            setOrders(donHangList);
+            setIsLoading(false);
+          },
+          error => {
+            setOrders([]);
+            setIsLoading(false);
+          },
+        );
+      } else {
+        unsubscribe = getDonHangThanhCong(
+          donHangList => {
+            // Không cần kết hợp với donHangShiperWithUsers nữa
+            setOrders(donHangList);
             setIsLoading(false);
           },
           error => {
@@ -107,7 +119,7 @@ const OrderListScreen = () => {
 
       // Gọi hàm getDonHangData từ orderlistservice
     };
-    setOrders([]);
+    setOrders([]); // Reset orders
     fetchOrders();
     // Cleanup unsubscribe khi component unmount hoặc tab thay đổi
     return () => {
@@ -115,57 +127,109 @@ const OrderListScreen = () => {
         unsubscribe();
       }
     };
-  }, [selectedTab, donHangShiperWithUsers]);
+  }, [selectedTab]);
 
   const listenToDonHangShiperWithUsers = () => {
-    try {
-      const unsubscribe = firestore()
-        .collectionGroup('DonHangShiper')
-        .onSnapshot(async snapshot => {
-          const donHangShiperData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            parentId: doc.ref.parent.parent.id,
-            ...doc.data(),
-          }));
+    if (selectedTab == 2) {
+      try {
+        const unsubscribe = firestore()
+          .collectionGroup('DonHangShiper')
+          .onSnapshot(async snapshot => {
+            const donHangShiperData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              parentId: doc.ref.parent.parent.id,
+              ...doc.data(),
+            }));
 
-          //console.log('donHangShiperData', donHangShiperData);
+            // Lấy danh sách userId của shipper
+            const userIds = [
+              ...new Set(donHangShiperData.map(item => item.parentId)),
+            ];
 
-          const userIds = [
-            ...new Set(donHangShiperData.map(item => item.parentId)),
-          ];
+            // Lấy thông tin user cho từng shipper
+            const userDataPromises = userIds.map(async userId => {
+              const userDoc = await firestore()
+                .collection('NguoiDung')
+                .doc(userId)
+                .get();
 
-          const userDataPromises = userIds.map(async userId => {
-            const userDoc = await firestore()
-              .collection('NguoiDung')
-              .doc(userId)
-              .get();
+              return {
+                idShiper: userId,
+                hoTenShiper: userDoc.data()?.hoTen || 'Không có tên',
+                sdtShiper:
+                  userDoc.data()?.soDienThoai || 'Không có số điện thoại',
+              };
+            });
 
-            return {
-              idShiper: userId,
-              hoTenShiper: userDoc.data()?.hoTen || 'Không có tên',
-              sdtShiper:
-                userDoc.data()?.soDienThoai || 'Không có số điện thoại',
-            };
+            const userData = await Promise.all(userDataPromises);
+
+            // Cập nhật danh sách shipper với thông tin user
+            const combinedData = donHangShiperData.map(order => {
+              const user =
+                userData.find(u => u.idShiper === order.parentId) || {};
+              return {
+                ...order,
+                userName: user.hoTenShiper,
+                userPhone: user.sdtShiper,
+              };
+            });
+            setDonHangShiperWithUsers(combinedData); // Cập nhật state với shipper
           });
 
-          const userData = await Promise.all(userDataPromises);
+        return unsubscribe;
+      } catch (error) {
+        console.error('Lỗi khi lắng nghe dữ liệu:', error);
+      }
+    } else if (selectedTab == 3) {
+      try {
+        const unsubscribe = firestore()
+          .collectionGroup('DonHangShiperDaGiao')
+          .onSnapshot(async snapshot => {
+            const donHangShiperData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              parentId: doc.ref.parent.parent.id,
+              ...doc.data(),
+            }));
 
-          const combinedData = donHangShiperData.map(order => {
-            const user =
-              userData.find(u => u.idShiper === order.parentId) || {};
-            return {
-              ...order,
-              userName: user.hoTenShiper,
-              userPhone: user.sdtShiper,
-            };
+            // Lấy danh sách userId của shipper
+            const userIds = [
+              ...new Set(donHangShiperData.map(item => item.parentId)),
+            ];
+
+            // Lấy thông tin user cho từng shipper
+            const userDataPromises = userIds.map(async userId => {
+              const userDoc = await firestore()
+                .collection('NguoiDung')
+                .doc(userId)
+                .get();
+
+              return {
+                idShiper: userId,
+                hoTenShiper: userDoc.data()?.hoTen || 'Không có tên',
+                sdtShiper:
+                  userDoc.data()?.soDienThoai || 'Không có số điện thoại',
+              };
+            });
+
+            const userData = await Promise.all(userDataPromises);
+
+            // Cập nhật danh sách shipper với thông tin user
+            const combinedData = donHangShiperData.map(order => {
+              const user =
+                userData.find(u => u.idShiper === order.parentId) || {};
+              return {
+                ...order,
+                userName: user.hoTenShiper,
+                userPhone: user.sdtShiper,
+              };
+            });
+            setDonHangShiperWithUsers(combinedData); // Cập nhật state với shipper
           });
-          //console.log('combinedData', combinedData);
-          setDonHangShiperWithUsers(combinedData); // Cập nhật state
-        });
 
-      return unsubscribe;
-    } catch (error) {
-      console.error('Lỗi khi lắng nghe dữ liệu:', error);
+        return unsubscribe;
+      } catch (error) {
+        console.error('Lỗi khi lắng nghe dữ liệu:', error);
+      }
     }
   };
 
@@ -310,27 +374,40 @@ const OrderListScreen = () => {
         });
         break;
 
-      case 'shipperNotPicked': // Sắp xếp theo Shipper chưa nhận
+      case 'shipperNotPicked': // Shipper chưa nhận
+      case 'shipperNotBring': // Shipper chưa mang
+      case 'shipperOnTheWay': // Shipper đang trên đường
+      case 'returnToWarehouse': // Trả lại kho
+      case 'failedDelivery': // Thất bại
+      case 'successfulDelivery': // Thành công
         sortedData.sort((a, b) => {
-          const aShipperNotPicked = a.tinhTrangDonHangShiper === undefined;
-          const bShipperNotPicked = b.tinhTrangDonHangShiper === undefined;
-          return bShipperNotPicked - aShipperNotPicked;
-        });
-        break;
+          // Lấy tinhTrangDonHangShiper từ donHangShiperWithUsers dựa vào id đơn hàng
+          const aShipperStatus = donHangShiperWithUsers.find(
+            item => item.id === a.id,
+          )?.tinhTrangDonHangShiper;
+          const bShipperStatus = donHangShiperWithUsers.find(
+            item => item.id === b.id,
+          )?.tinhTrangDonHangShiper;
 
-      case 'shipperNotBring':
-        sortedData.sort((a, b) => {
-          const aShipperNotPicked = a.tinhTrangDonHangShiper === 0;
-          const bShipperNotPicked = b.tinhTrangDonHangShiper === 0;
-          return bShipperNotPicked - aShipperNotPicked;
-        });
-        break;
-
-      case 'shipperOnTheWay': // Sắp xếp theo Shipper đang giao
-        sortedData.sort((a, b) => {
-          const aShipperNotPicked = a.tinhTrangDonHangShiper === 2;
-          const bShipperNotPicked = b.tinhTrangDonHangShiper === 2;
-          return bShipperNotPicked - aShipperNotPicked;
+          // Sắp xếp theo tình trạng shipper
+          switch (sortOption) {
+            case 'shipperNotPicked':
+              return (
+                (bShipperStatus === undefined) - (aShipperStatus === undefined)
+              );
+            case 'shipperNotBring':
+              return (bShipperStatus === 0) - (aShipperStatus === 0);
+            case 'shipperOnTheWay':
+              return (bShipperStatus === 2) - (aShipperStatus === 2);
+            case 'returnToWarehouse':
+              return (bShipperStatus === 3) - (aShipperStatus === 3);
+            case 'failedDelivery':
+              return (bShipperStatus === -1) - (aShipperStatus === -1);
+            case 'successfulDelivery':
+              return (bShipperStatus === 4) - (aShipperStatus === 4);
+            default:
+              return 0;
+          }
         });
         break;
       default:
@@ -339,13 +416,132 @@ const OrderListScreen = () => {
     setOrders(sortedData);
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.id.toLowerCase().includes(searchText.toLowerCase()) // Tìm kiếm không phân biệt chữ hoa chữ thường
+  const filteredOrders = orders.filter(
+    order => order.id.toLowerCase().includes(searchText.toLowerCase()), // Tìm kiếm không phân biệt chữ hoa chữ thường
   );
 
   useEffect(() => {
     sortedOrders();
   }, [sortOption]);
+
+  const deleteDonHangShiperDocument = async (shipperId, donHangId) => {
+    try {
+      const documentRef = firestore()
+        .collection('NguoiDung')
+        .doc(shipperId)
+        .collection('DonHangShiper')
+        .doc(donHangId);
+
+      // Xóa document
+      await documentRef.delete();
+      console.log(`Đã xóa document DonHangShiper: ${donHangId}`);
+    } catch (error) {
+      console.error('Lỗi khi xóa document:', error);
+    }
+  };
+
+  const deleteDonHang = async donHangId => {
+    try {
+      // Lấy dữ liệu DonHang trước khi xóa
+      const donHangDoc = await firestore()
+        .collection('DonHang')
+        .doc(donHangId)
+        .get();
+
+      if (!donHangDoc.exists) {
+        console.error('Không tìm thấy DonHang với ID:', donHangId);
+        return;
+      }
+
+      const donHangData = donHangDoc.data();
+
+      // Thêm vào DonHangBiXoa
+      await firestore()
+        .collection('DonHangBiXoa')
+        .doc(donHangId) // Có thể dùng ID giống để theo dõi
+        .set({
+          ...donHangData,
+          deletedAt: firestore.FieldValue.serverTimestamp(), // Dấu thời gian xóa
+        });
+
+      // Xóa DonHang
+      await firestore().collection('DonHang').doc(donHangId).delete();
+
+      console.log('Đơn hàng đã được xóa và thêm vào DonHangBiXoa.');
+    } catch (error) {
+      console.error('Lỗi khi xóa đơn hàng:', error);
+    }
+  };
+
+  const handleUpdateDonHang = async (shipperId, id) => {
+    try {
+      const donHangRef = firestore().collection('DonHang').doc(id);
+      const donHangShiperRef = firestore()
+        .collection('NguoiDung')
+        .doc(shipperId) // Thay bằng user hiện tại
+        .collection('DonHangShiper')
+        .doc(id);
+
+      // Lấy dữ liệu đơn hàng từ `DonHang`
+      const donHangDoc = await donHangRef.get();
+      if (!donHangDoc.exists) {
+        throw new Error(`Đơn hàng với ID ${id} không tồn tại trong DonHang`);
+      }
+      const donHangData = donHangDoc.data();
+
+      // Lấy dữ liệu đơn hàng từ `DonHangShiper`
+      const donHangShiperDoc = await donHangShiperRef.get();
+      if (!donHangShiperDoc.exists) {
+        throw new Error(
+          `Đơn hàng với ID ${id} không tồn tại trong DonHangShiper`,
+        );
+      }
+      const donHangShiperData = donHangShiperDoc.data();
+
+      // Kiểm tra xem đã có `ngayThanhToan` trong DonHang chưa
+      if (!donHangData.ngayThanhToan) {
+        // Nếu chưa có `ngayThanhToan`, thêm giá trị mới
+        await donHangRef.update({
+          tinhTrangDonHang: 3,
+          tinhTrangThanhToan: 1,
+          ngayThanhToan: firestore.FieldValue.serverTimestamp(), // Thêm thời gian thanh toán
+        });
+      } else {
+        // Nếu đã có `ngayThanhToan`, không cập nhật lại
+        console.log('Đã có ngày thanh toán, không cần cập nhật.');
+      }
+
+      // Thêm đơn hàng đã cập nhật vào `DonHangThanhCong`
+      const donHangThanhCongRef = firestore()
+        .collection('DonHangThanhCong')
+        .doc(id);
+      await donHangThanhCongRef.set({
+        ...donHangData,
+        tinhTrangDonHang: 3,
+        tinhTrangThanhToan: 1,
+        // Chỉ duy trì `ngayThanhToan` nếu đã có, không ghi đè nó
+        ngayThanhToan: donHangData.ngayThanhToan,
+      });
+
+      // Xóa đơn hàng khỏi `DonHang`
+      await donHangRef.delete();
+
+      // Thêm đơn hàng đã xóa từ `DonHangShiper` vào `DonHangShiperDaGiao`
+      const donHangShiperDaGiaoRef = firestore()
+        .collection('NguoiDung')
+        .doc(shipperId) // Thay bằng user hiện tại
+        .collection('DonHangShiperDaGiao')
+        .doc(id);
+      await donHangShiperDaGiaoRef.set(donHangShiperData);
+
+      // Xóa đơn hàng khỏi `DonHangShiper`
+      await donHangShiperRef.delete();
+
+      console.log(`Hoàn tất xử lý đơn hàng với ID ${id}`);
+    } catch (error) {
+      console.error('Lỗi khi xử lý đơn hàng:', error);
+    }
+  };
 
   const renderOrder = ({item}) => (
     <TouchableOpacity
@@ -355,13 +551,8 @@ const OrderListScreen = () => {
         setIsModalVisible(true);
         fetchChiTietDonHang(item.id); // Hiển thị modal
       }}>
-      <View style={styles.row}>
-        <Text style={styles.title}>Mã đơn hàng: </Text>
-        <View style={styles.lineContainer}>
-          <Text style={styles.line}></Text>
-          <Text style={styles.content}>{item.id}</Text>
-        </View>
-      </View>
+      <Text style={styles.modalTitle2}>Đơn hàng:</Text>
+      <Text style={[styles.modalTitle2,{marginBottom: 5}]}>{item.id}</Text>
       <View style={styles.row}>
         <Text style={styles.title}>Trạng thái thanh toán: </Text>
         <View style={styles.lineContainer}>
@@ -398,24 +589,51 @@ const OrderListScreen = () => {
           </View>
         </View>
       ) : null}
-      {item.shipperName && (
+      {donHangShiperWithUsers?.find(shipper => shipper.id === item.id) && (
         <>
           <View style={styles.row}>
             <Text style={styles.title}>Tên Shiper: </Text>
             <View style={styles.lineContainer}>
               <Text style={styles.line}></Text>
-              <Text style={styles.content}>{item.shipperName}</Text>
+              <Text style={styles.content}>
+                {donHangShiperWithUsers?.find(shipper => shipper.id === item.id)
+                  ?.userName || 'Chưa có thông tin shipper'}
+              </Text>
             </View>
           </View>
           <View style={styles.row}>
             <Text style={styles.title}>SĐT Shiper: </Text>
             <View style={styles.lineContainer}>
               <Text style={styles.line}></Text>
-              <Text style={styles.content}>{item.shipperPhone}</Text>
+              <Text style={styles.content}>
+                {donHangShiperWithUsers?.find(shipper => shipper.id === item.id)
+                  ?.userPhone || 'Chưa có thông tin shipper'}
+              </Text>
             </View>
           </View>
         </>
       )}
+
+      {item.deletedAt ? (
+        <View style={styles.row}>
+          <Text style={styles.title}>Ngày bị hủy: </Text>
+          <View style={styles.lineContainer}>
+            <Text style={styles.line}></Text>
+            <Text style={styles.content}>{formatDate(item.deletedAt)}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      {donHangShiperWithUsers?.find(shipper => shipper.id === item.id)
+        ?.tinhTrangDonHangShiper === -1 ? (
+        <View style={styles.row}>
+          <Text style={styles.title}>Tên Shiper: </Text>
+          <View style={styles.lineContainer}>
+            <Text style={styles.line}></Text>
+            <Text style={styles.content}>Đơn hàng giao không thành công</Text>
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.actions}>
         {selectedTab === 0 && (
@@ -468,12 +686,12 @@ const OrderListScreen = () => {
               style={[styles.button, styles.cancel]}
               onPress={() => {
                 approveOrder(item.id, 4);
+                deleteDonHang(item.id);
               }}>
               <Text style={styles.buttonText}>Hủy đơn</Text>
             </TouchableOpacity>
           </>
         )}
-
         {selectedTab === 1 && (
           <TouchableOpacity
             style={[styles.button, styles.approve]}
@@ -486,16 +704,90 @@ const OrderListScreen = () => {
             style={[
               styles.button,
               styles.complete,
-              item.tinhTrangDonHangShiper !== 0 && styles.disabledButton,
+              // Kiểm tra trạng thái của `tinhTrangDonHangShiper` từ donHangShiperWithUsers
+              ![0, -1, 3, 4].includes(
+                donHangShiperWithUsers?.find(shipper => shipper.id === item.id)
+                  ?.tinhTrangDonHangShiper,
+              ) && styles.disabledButton,
+              // Thêm style tùy thuộc vào trạng thái tinhTrangDonHangShiper
+              (() => {
+                const shipperData = donHangShiperWithUsers?.find(
+                  shipper => shipper.id === item.id,
+                );
+                if (!shipperData) return null;
+
+                switch (shipperData.tinhTrangDonHangShiper) {
+                  case 0:
+                    return styles.giaoChoShiper;
+                  case -1:
+                    return styles.huyDon;
+                  case 1:
+                    return styles.dangLayHang;
+                  case 2:
+                    return styles.dangGiao;
+                  case 4:
+                    return styles.xacNhanHoanThanh;
+                  default:
+                    return null;
+                }
+              })(),
             ]}
-            disabled={item.tinhTrangDonHangShiper !== 0}
-            onPress={() => approveOrderShipper(item.shipperid, item.id, 1)}>
+            disabled={
+              ![0, -1, 3, 4].includes(
+                donHangShiperWithUsers?.find(shipper => shipper.id === item.id)
+                  ?.tinhTrangDonHangShiper,
+              )
+            }
+            onPress={() => {
+              const shipperData = donHangShiperWithUsers?.find(
+                shipper => shipper.id === item.id,
+              );
+              const tinhTrangShiper = shipperData
+                ? shipperData.tinhTrangDonHangShiper
+                : item.tinhTrangDonHangShiper;
+
+              switch (tinhTrangShiper) {
+                case 0:
+                  approveOrderShipper(shipperData.parentId, item.id, 1); // Sử dụng shipperid từ shipperData
+                  break;
+                case -1:
+                  deleteDonHangShiperDocument(shipperData.parentId, item.id); // Sử dụng shipperid từ shipperData
+                  deleteDonHang(item.id);
+                  break;
+                case 3:
+                  deleteDonHangShiperDocument(shipperData.parentId, item.id); // Sử dụng shipperid từ shipperData
+                  break;
+                case 4:
+                  handleUpdateDonHang(shipperData.parentId, item.id); // Sử dụng shipperid từ shipperData
+                  break;
+                default:
+                  break;
+              }
+            }}>
             <Text style={styles.buttonText}>
-              {item.tinhTrangDonHangShiper === undefined
+              {/* Kiểm tra nếu không có shipper, hiển thị 'Chưa có shipper nhận' */}
+              {donHangShiperWithUsers?.find(
+                shipper => shipper.id === item.id,
+              ) === undefined
                 ? 'Chưa có shipper nhận'
-                : item.tinhTrangDonHangShiper === 0
-                ? 'Giao cho shipper'
-                : 'Shipper đang giao'}
+                : (() => {
+                    const shipperData = donHangShiperWithUsers?.find(
+                      shipper => shipper.id === item.id,
+                    );
+                    if (!shipperData) return 'Chưa có shipper nhận';
+                    switch (shipperData.tinhTrangDonHangShiper) {
+                      case 0:
+                        return 'Giao cho shipper';
+                      case 1:
+                        return 'Chờ shipper lấy hàng';
+                      case 2:
+                        return 'Shipper đang giao';
+                      case 4:
+                        return 'Xác nhận hoàn thành';
+                      default:
+                        return 'Xác nhận nhận hàng';
+                    }
+                  })()}
             </Text>
           </TouchableOpacity>
         )}
@@ -563,6 +855,9 @@ const OrderListScreen = () => {
               {renderSortOption('shipperNotPicked', 'Shipper chưa nhận')}
               {renderSortOption('shipperNotBring', 'Shipper chưa lấy hàng')}
               {renderSortOption('shipperOnTheWay', 'Shipper đang giao')}
+              {renderSortOption('returnToWarehouse', 'Đơn hoàn kho')}
+              {renderSortOption('failedDelivery', 'Đơn giao không thành công')}
+              {renderSortOption('successfulDelivery', 'Đơn giao thành công')}
             </>
           )}
         </View>
@@ -674,14 +969,18 @@ const OrderListScreen = () => {
                       </Text>
                     </View>
                   </View>
-                  {selectedOrder.shipperName && (
+                  {donHangShiperWithUsers?.find(
+                    shipper => shipper.id === selectedOrder.id,
+                  ) && (
                     <>
                       <View style={styles.row}>
                         <Text style={styles.title}>Tên Shiper: </Text>
                         <View style={styles.lineContainer}>
                           <Text style={styles.line}></Text>
                           <Text style={styles.content}>
-                            {selectedOrder.shipperName}
+                            {donHangShiperWithUsers?.find(
+                              shipper => shipper.id === selectedOrder.id,
+                            )?.userName || 'Chưa có thông tin shipper'}
                           </Text>
                         </View>
                       </View>
@@ -690,12 +989,38 @@ const OrderListScreen = () => {
                         <View style={styles.lineContainer}>
                           <Text style={styles.line}></Text>
                           <Text style={styles.content}>
-                            {selectedOrder.shipperPhone}
+                            {donHangShiperWithUsers?.find(
+                              shipper => shipper.id === selectedOrder.id,
+                            )?.userPhone || 'Chưa có thông tin shipper'}
                           </Text>
                         </View>
                       </View>
                     </>
                   )}
+                  {selectedOrder.deletedAt ? (
+                    <View style={styles.row}>
+                      <Text style={styles.title}>Ngày bị hủy: </Text>
+                      <View style={styles.lineContainer}>
+                        <Text style={styles.line}></Text>
+                        <Text style={styles.content}>
+                          {formatDate(selectedOrder.deletedAt)}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+                  {donHangShiperWithUsers?.find(
+                    shipper => shipper.id === selectedOrder.id,
+                  )?.tinhTrangDonHangShiper === -1 ? (
+                    <View style={styles.row}>
+                      <Text style={styles.title}>Tên Shiper: </Text>
+                      <View style={styles.lineContainer}>
+                        <Text style={styles.line}></Text>
+                        <Text style={styles.content}>
+                          Đơn hàng giao không thành công
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
                 </ScrollView>
 
                 <Text style={[styles.modalTitle, {marginTop: 10}]}>
@@ -741,6 +1066,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  giaoChoShiper: {
+    backgroundColor: 'green',
+  },
+  huyDon: {
+    backgroundColor: 'red',
+  },
+  dangLayHang: {
+    backgroundColor: 'orange',
+  },
+  dangGiao: {
+    backgroundColor: 'blue',
+  },
+  xacNhanHoanThanh: {
+    backgroundColor: 'purple',
   },
   sortOption: {
     paddingVertical: 3,
@@ -847,7 +1187,19 @@ const styles = StyleSheet.create({
     height: '80%',
     elevation: 5,
   },
-  modalTitle: {fontSize: 18, fontWeight: 'bold', marginVertical: 15},
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 15,
+  },
+  modalTitle2: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -937,6 +1289,10 @@ const styles = StyleSheet.create({
   },
   cancel: {
     backgroundColor: '#F44336',
+    position: 'absolute',
+    top: -230,
+    right: 10,
+    padding: 5,
   },
   complete: {
     backgroundColor: '#2196F3',

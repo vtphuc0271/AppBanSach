@@ -22,7 +22,61 @@ export const getDonHangData = (selectedTab, callback, onError) => {
       error => {
         console.error('Lỗi khi lắng nghe dữ liệu:', error);
         onError(error);
-      }
+      },
+    );
+
+  return unsubscribe;
+};
+
+export const getDonHangThanhCong = (callback, onError) => {
+  const unsubscribe = firestore()
+    .collection('DonHangThanhCong')
+    .onSnapshot(
+      snapshot => {
+        if (snapshot.empty) {
+          console.log('Không có đơn hàng nào.');
+          callback([]);
+          return;
+        }
+
+        const donHangList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        callback(donHangList);
+      },
+      error => {
+        console.error('Lỗi khi lắng nghe dữ liệu:', error);
+        onError(error);
+      },
+    );
+
+  return unsubscribe;
+};
+
+export const getDonHangBiHuyData = (callback, onError) => {
+  const unsubscribe = firestore()
+    .collection('DonHangBiXoa')
+    .onSnapshot(
+      snapshot => {
+        if (snapshot.empty) {
+          console.log('Không có đơn hàng nào.');
+          callback([]);
+          return;
+        }
+
+        const donHangList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        callback(donHangList);
+      },
+      error => {
+        console.error('Lỗi khi lắng nghe dữ liệu:', error);
+        onError(error);
+      },
     );
 
   return unsubscribe;

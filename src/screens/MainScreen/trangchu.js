@@ -32,7 +32,7 @@ const TrangChuScreen = () => {
   const [data, setData] = useState([]);
   const [purchasedBooks, setPurchasedBooks] = useState([]);
 
-  console.log('day la user: ', user);
+  //console.log('day la user: ', user);
 
   const toggleFilter = () => {
     setFilterItem(!filterItem);
@@ -240,39 +240,42 @@ const TrangChuScreen = () => {
     };
   }, []);
 
-  const addToCart = async (id_Sach, soLuong = 1) => {
+  const addToCart = async (id_Sach, giaTien, soLuong = 1) => {
     if (!user?.uid) {
-      console.error('User chưa đăng nhập');
+      alert('Bạn cần đăng nhập để mua');
       return;
     }
-
+  
     try {
-      const cartItemRef = firestore()
+      // Truy cập document giỏ hàng của người dùng
+      const cartRef = firestore()
         .collection('GioHang')
-        .doc(`${user.uid}_${id_Sach}`); // Dùng id_NguoiDung và id_Sach làm Document ID
-
-      const cartItemSnapshot = await cartItemRef.get();
-
-      if (cartItemSnapshot.exists) {
-        // Nếu sản phẩm đã tồn tại, tăng số lượng lên
-        const currentSoLuong = parseInt(cartItemSnapshot.data().soLuong) || 0;
-        await cartItemRef.update({
+        .doc(user.uid); // Document ID là id của người dùng
+  
+      // Kiểm tra sự tồn tại của subcollection `Items` và document `id_Sach`
+      const itemRef = cartRef.collection('Items').doc(id_Sach);
+      const itemSnapshot = await itemRef.get();
+  
+      if (itemSnapshot.exists) {
+        // Nếu sản phẩm đã tồn tại, tăng số lượng
+        const currentSoLuong = parseInt(itemSnapshot.data().soLuong) || 0;
+        await itemRef.update({
           soLuong: (currentSoLuong + soLuong).toString(),
         });
       } else {
-        // Nếu sản phẩm chưa tồn tại, tạo mới với soLuong = 1
-        await cartItemRef.set({
-          id_NguoiDung: user.uid,
-          id_Sach,
+        // Nếu sản phẩm chưa tồn tại, thêm mới
+        await itemRef.set({
+          giaMua: giaTien,
           soLuong: soLuong.toString(),
         });
       }
-
+  
       console.log('Thêm vào giỏ hàng thành công');
     } catch (error) {
       console.error('Lỗi khi thêm vào giỏ hàng: ', error);
     }
   };
+  
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
@@ -341,7 +344,7 @@ const TrangChuScreen = () => {
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={styles.buttonAddToCart}
-                  onPress={() => addToCart(item.id)}>
+                  onPress={() => addToCart(item.id,item.giaTien)}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
                   <Image source={require('../../assets/themvaogio.png')} style={styles.icon} />
                 </TouchableOpacity>
