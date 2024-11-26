@@ -220,49 +220,9 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
 
-              {/* menu shipper/nhân viên */}
-              {(user && user.maVaiTro === '4') ||
-                (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent} 
-                onPress={() => {navigation.navigate('MyOder');
-                  closeMenu();
-                }}>
-                  <View style={{ paddingLeft: 20 }}></View>
-                  <Image
-                    source={require('../assets/iconmenudonhang.png')}
-                    style={styles.icon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.menuItem}>Đơn hàng của tôi</Text>
-                </TouchableOpacity>
-              ) : null}
-              {(user && user.maVaiTro === '3') ||
-                (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
-                  <View style={{ paddingLeft: 20 }}></View>
-                  <Image
-                    source={require('../assets/iconmenudonhang.png')}
-                    style={styles.icon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.menuItem}>Quản lý kho hàng</Text>
-                </TouchableOpacity>
-              ) : null}
-              {(user && user.maVaiTro === '4') ||
-                (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent} 
-                onPress={() => {navigation.navigate('OderDelivery');
-                closeMenu();
-              }}>
-                  <View style={{ paddingLeft: 20 }}></View>
-                  <Image
-                    source={require('../assets/iconmenudanhsachdonhangcangiao.png')}
-                    style={styles.icon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.menuItem}>Đơn hàng cần giao</Text>
-                </TouchableOpacity>
-              ) : null}
+
+       
+       
 
               {user && user.maVaiTro === '1' ? (
                 <TouchableOpacity
@@ -418,7 +378,12 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               ) : null}
               {(user && user.maVaiTro === '4') ||
                 (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                  
+                <TouchableOpacity style={styles.buttonMenuContent}
+                onPress={()=>{navigation.navigate('OderDelivery')
+                  closeMenu();
+                }}
+                  >
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenudanhsachdonhangcangiao.png')}
@@ -430,7 +395,11 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
               ) : null}
               {(user && user.maVaiTro === '4') ||
                 (user && user.maVaiTro === '1') ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent}
+                onPress={()=>{navigation.navigate('MyOder')
+                  closeMenu();
+                }}
+                >
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenudonhang.png')}
@@ -441,7 +410,11 @@ const NarbarCard = ({ ScreenName, iconShop = false }) => {
                 </TouchableOpacity>
               ) : null}
               {(user && user.maVaiTro === '1') || (user && user.maVaiTro) === '3' ? (
-                <TouchableOpacity style={styles.buttonMenuContent}>
+                <TouchableOpacity style={styles.buttonMenuContent}
+                onPress={()=>{navigation.navigate('OrderListScreen')
+                  closeMenu();
+                }}
+                >
                   <View style={{ paddingLeft: 20 }}></View>
                   <Image
                     source={require('../assets/iconmenuquantri.png')}
