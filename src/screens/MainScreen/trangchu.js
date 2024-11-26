@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import NavbarCard from '../../components/NavbarCard';
-import { UserContext } from '../../context/UserContext';
-import { useNavigation } from '@react-navigation/native';
-
+import {UserContext} from '../../context/UserContext';
+import {useNavigation} from '@react-navigation/native';
 
 const TrangChuScreen = () => {
   const navigation = useNavigation();
@@ -29,7 +28,7 @@ const TrangChuScreen = () => {
   const [theLoai, setGenres] = useState([]);
   const [ngonNgu, setNgonNgu] = useState([]);
   const [nhaXuatBan, setPublishers] = useState([]);
-  const { user } = useContext(UserContext);
+  const {user} = useContext(UserContext);
   const [data, setData] = useState([]);
   const [purchasedBooks, setPurchasedBooks] = useState([]);
 
@@ -50,7 +49,7 @@ const TrangChuScreen = () => {
         .doc(userId)
         .collection('SachDaMua')
         .doc(bookId)
-        .get()  // Đổi .onSnapshot() thành .get() để lấy một lần dữ liệu thay vì lắng nghe liên tục
+        .get() // Đổi .onSnapshot() thành .get() để lấy một lần dữ liệu thay vì lắng nghe liên tục
         .then(snapshot => {
           if (snapshot.exists) {
             resolve(true);
@@ -60,21 +59,28 @@ const TrangChuScreen = () => {
         })
         .catch(error => {
           console.error('Error checking if book is purchased: ', error);
-          resolve(false);  // Trả về false nếu có lỗi
+          resolve(false); // Trả về false nếu có lỗi
         });
-  
+
       return unsubscribe; // Clean up nếu cần thiết
     });
   };
 
-  const renderReviewButton = (item) => {
-    const isPurchased = purchasedBooks.includes(item.id);  // Kiểm tra sách đã được mua chưa
+  const renderReviewButton = item => {
+    const isPurchased = purchasedBooks.includes(item.id); // Kiểm tra sách đã được mua chưa
     return (
       <TouchableOpacity
         style={styles.buttonReviewNow}
-        onPress={() => isPurchased ? navigation.navigate('RatingDoScreen', { bookId: item.id }) : alert('Bạn cần mua sách để đánh giá')}>
+        onPress={() =>
+          isPurchased
+            ? navigation.navigate('RatingDoScreen', {bookId: item.id})
+            : alert('Bạn cần mua sách để đánh giá')
+        }>
         <Text style={styles.buttonText}>Đánh giá ngay</Text>
-        <Image source={require('../../assets/Message.png')} style={styles.icon} />
+        <Image
+          source={require('../../assets/Message.png')}
+          style={styles.icon}
+        />
       </TouchableOpacity>
     );
   };
@@ -82,7 +88,7 @@ const TrangChuScreen = () => {
   useEffect(() => {
     const checkPurchasedBooks = async () => {
       if (!user || !data || data.length === 0) return;
-  
+
       const purchased = [];
       for (const book of data) {
         try {
@@ -91,12 +97,12 @@ const TrangChuScreen = () => {
             purchased.push(book.id);
           }
         } catch (error) {
-          console.error("Error checking purchased book:", error);
+          console.error('Error checking purchased book:', error);
         }
       }
-      setPurchasedBooks(purchased);  // Cập nhật danh sách sách đã mua
+      setPurchasedBooks(purchased); // Cập nhật danh sách sách đã mua
     };
-  
+
     checkPurchasedBooks();
   }, [data, user]);
 
@@ -153,9 +159,6 @@ const TrangChuScreen = () => {
     sortData();
   }, [sortOption]);
 
-
-
-
   const getAuthorNameById = authorId => {
     const author = tacGia.find(a => a.id === authorId);
     return author ? author.name : 'Unknown Author';
@@ -165,7 +168,7 @@ const TrangChuScreen = () => {
     const tl = theLoai.find(t => t.id === theLoaiId);
     return tl ? tl.name : 'Unknown theLoai';
   };
-  
+
   const getNgonNguNameById = ngonNguId => {
     const tl = ngonNgu.find(t => t.id === ngonNguId);
     return tl ? tl.name : 'Unknown theLoai';
@@ -207,19 +210,21 @@ const TrangChuScreen = () => {
         },
       );
 
-      // Lấy dữ liệu ngon ngu
-    const unsubscribeNgonNgu = firestore().collection('languages').onSnapshot(
-      snapshot => {
-        const ngonNgu = snapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name,
-        }));
-        setNgonNgu(ngonNgu);
-      },
-      error => {
-        console.error('Error fetching authors: ', error);
-      }
-    );
+    // Lấy dữ liệu ngon ngu
+    const unsubscribeNgonNgu = firestore()
+      .collection('languages')
+      .onSnapshot(
+        snapshot => {
+          const ngonNgu = snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name,
+          }));
+          setNgonNgu(ngonNgu);
+        },
+        error => {
+          console.error('Error fetching authors: ', error);
+        },
+      );
 
     const unsubscribePublishers = firestore()
       .collection('NhaXuatBan')
@@ -266,17 +271,15 @@ const TrangChuScreen = () => {
       alert('Bạn cần đăng nhập để mua');
       return;
     }
-  
+
     try {
       // Truy cập document giỏ hàng của người dùng
-      const cartRef = firestore()
-        .collection('GioHang')
-        .doc(user.uid); // Document ID là id của người dùng
-  
+      const cartRef = firestore().collection('GioHang').doc(user.uid); // Document ID là id của người dùng
+
       // Kiểm tra sự tồn tại của subcollection `Items` và document `id_Sach`
       const itemRef = cartRef.collection('Items').doc(id_Sach);
       const itemSnapshot = await itemRef.get();
-  
+
       if (itemSnapshot.exists) {
         // Nếu sản phẩm đã tồn tại, tăng số lượng
         const currentSoLuong = parseInt(itemSnapshot.data().soLuong) || 0;
@@ -290,17 +293,16 @@ const TrangChuScreen = () => {
           soLuong: soLuong.toString(),
         });
       }
-  
+
       console.log('Thêm vào giỏ hàng thành công');
     } catch (error) {
       console.error('Lỗi khi thêm vào giỏ hàng: ', error);
     }
   };
-  
 
   // Hàm điều hướng khi người dùng nhấn "Mua ngay"
   const handleBuyNow = id_Sach => {
-    navigation.navigate('PaymentScreen', { id_Sach: id_Sach });
+    navigation.navigate('PaymentScreen', {id_Sach: id_Sach});
   };
 
   const displayLimitedData = (data, limit) => {
@@ -311,7 +313,7 @@ const TrangChuScreen = () => {
     setExpandedItem(prevState => (prevState === itemId ? null : itemId));
   };
 
-  const renderStars = (rating) => {
+  const renderStars = rating => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
@@ -321,33 +323,49 @@ const TrangChuScreen = () => {
             i <= Math.floor(rating)
               ? require('../../assets/fullStar.png') // Sao đầy
               : i - 1 < rating
-                ? require('../../assets/halfStar.png') // Sao nửa
-                : require('../../assets/emptyStar.png') // Sao rỗng
+              ? require('../../assets/halfStar.png') // Sao nửa
+              : require('../../assets/emptyStar.png') // Sao rỗng
           }
           style={styles.star}
-        />
+        />,
       );
     }
     return stars;
   };
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.itemContainer, { backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6' }]}>
+  const renderItem = ({item}) => (
+    <View
+      style={[
+        styles.itemContainer,
+        {backgroundColor: expandedItem === item.id ? '#98EE8A' : '#EFFFD6'},
+      ]}>
       <TouchableOpacity onPress={() => toggleExpand(item.id)}>
         <View style={styles.row}>
           <View style={styles.imageContainer}>
             {item.anhSach ? (
-              <Image source={{ uri: item.anhSach }} style={styles.categoryImage} />
+              <Image
+                source={{uri: item.anhSach}}
+                style={styles.categoryImage}
+              />
             ) : (
-              <Image source={require('../../assets/default.png')} style={styles.categoryImage} />
+              <Image
+                source={require('../../assets/default.png')}
+                style={styles.categoryImage}
+              />
             )}
           </View>
           <View style={styles.infoContainer}>
-            <View style={{ marginLeft: 15, padding: 0 }}>
-              <Text style={[styles.title, { maxWidth: 250, flexWrap: 'wrap' }]}>{item.tenSach}</Text>
-              <Text style={[styles.text, { maxWidth: 250, flexWrap: 'wrap' }]}>{getAuthorNameById(item.tacGia)}</Text>
+            <View style={{marginLeft: 15, padding: 0}}>
+              <Text style={[styles.title, {maxWidth: 250, flexWrap: 'wrap'}]}>
+                {item.tenSach}
+              </Text>
+              <Text style={[styles.text, {maxWidth: 250, flexWrap: 'wrap'}]}>
+                {getAuthorNameById(item.tacGia)}
+              </Text>
               <View style={styles.ratingContainer}>
-                <View style={styles.starContainer}>{renderStars(item.soSaoTrungBinh)}</View>
+                <View style={styles.starContainer}>
+                  {renderStars(item.soSaoTrungBinh)}
+                </View>
                 <Text style={styles.votes}>
                   ({item.soLuotDanhGia ? item.soLuotDanhGia : 0} lượt đánh giá)
                 </Text>
@@ -355,9 +373,9 @@ const TrangChuScreen = () => {
               <Text style={styles.giaTien}>
                 {item.giaTien
                   ? new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                  }).format(item.giaTien)
+                      style: 'currency',
+                      currency: 'VND',
+                    }).format(item.giaTien)
                   : '0 VNĐ'}
               </Text>
             </View>
@@ -365,15 +383,21 @@ const TrangChuScreen = () => {
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={styles.buttonAddToCart}
-                  onPress={() => addToCart(item.id,item.giaTien)}>
+                  onPress={() => addToCart(item.id, item.giaTien)}>
                   <Text style={styles.buttonText}>Thêm vào giỏ</Text>
-                  <Image source={require('../../assets/themvaogio.png')} style={styles.icon} />
+                  <Image
+                    source={require('../../assets/themvaogio.png')}
+                    style={styles.icon}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.buttonBuyNow}
                   onPress={() => handleBuyNow(item.id)}>
                   <Text style={styles.buttonText}>Mua ngay</Text>
-                  <Image source={require('../../assets/muangay.png')} style={styles.icon} />
+                  <Image
+                    source={require('../../assets/muangay.png')}
+                    style={styles.icon}
+                  />
                 </TouchableOpacity>
               </View>
             )}
@@ -384,7 +408,9 @@ const TrangChuScreen = () => {
       {expandedItem === item.id && (
         <>
           <View style={styles.divider} />
-          <TouchableOpacity style={styles.detailsContainer} onPress={() => toggleExpand(item.id)}>
+          <TouchableOpacity
+            style={styles.detailsContainer}
+            onPress={() => toggleExpand(item.id)}>
             <Text>Thể loại: {getTheLoaiNameById(item.theLoai)}</Text>
             <View style={styles.row}>
               <View style={styles.column}>
@@ -403,23 +429,38 @@ const TrangChuScreen = () => {
       )}
       {expandedItem === item.id && (
         <View>
-          <View style={{ alignItems: 'center', paddingBottom: 10 }}>
+          <View style={{alignItems: 'center', paddingBottom: 10}}>
             {renderReviewButton(item)}
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.buttonReview}
-              onPress={() => navigation.navigate('RatingScreen', { bookId: item.id })}>
+              onPress={() =>
+                navigation.navigate('RatingScreen', {bookId: item.id})
+              }>
               <Text style={styles.buttonText}>Xem Đánh giá</Text>
-              <Image source={require('../../assets/Message.png')} style={styles.icon} />
+              <Image
+                source={require('../../assets/Message.png')}
+                style={styles.icon}
+              />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonAddToCart}>
+            <TouchableOpacity
+              style={styles.buttonAddToCart}
+              onPress={() => addToCart(item.id, item.giaTien)}>
               <Text style={styles.buttonText}>Thêm giỏ</Text>
-              <Image source={require('../../assets/themvaogio.png')} style={styles.icon} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonBuyNow}>
+              <Image
+                source={require('../../assets/themvaogio.png')}
+                style={styles.icon}
+              />
+            </TouchableOpacity>     
+            <TouchableOpacity
+              style={styles.buttonBuyNow}
+              onPress={() => handleBuyNow(item.id)}>
               <Text style={styles.buttonText}>Mua ngay</Text>
-              <Image source={require('../../assets/muangay.png')} style={styles.icon} />
+              <Image
+                source={require('../../assets/muangay.png')}
+                style={styles.icon}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -427,20 +468,19 @@ const TrangChuScreen = () => {
     </View>
   );
 
-
   const renderSortOption = (option, label) => {
     return (
       <TouchableOpacity
         style={[
           styles.sortOption,
           sortOption === option
-            ? { backgroundColor: '#4CAF50' }
-            : { backgroundColor: '#fff' }, // Bôi đen tùy chọn đã chọn
+            ? {backgroundColor: '#4CAF50'}
+            : {backgroundColor: '#fff'}, // Bôi đen tùy chọn đã chọn
         ]}
         onPress={() => handleSortOption(option)}
         disabled={sortOption === option} // Disable lựa chọn đã chọn
       >
-        <Text style={{ color: sortOption === option ? '#fff' : '#000' }}>
+        <Text style={{color: sortOption === option ? '#fff' : '#000'}}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -484,7 +524,7 @@ const TrangChuScreen = () => {
       {filterItem && (
         <ScrollView
           style={styles.filterContainer}
-          contentContainerStyle={{ paddingBottom: 50 }}>
+          contentContainerStyle={{paddingBottom: 50}}>
           {/* Thể loại */}
           <Text style={styles.sectionTitle}>Thể loại</Text>
           <View style={styles.tagContainer}>
@@ -643,7 +683,7 @@ const styles = StyleSheet.create({
     width: 105,
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.5,
     shadowRadius: 15,
     elevation: 8,

@@ -290,6 +290,88 @@ const OrderListScreen = () => {
     }
   };
 
+  const fetchChiTietDonHangThanhCong = async orderId => {
+    try {
+      const chiTietDonHangRef = firestore()
+        .collection('ChiTietDonHangThanhCong')
+        .doc(orderId)
+        .collection('Items');
+
+      const snapshot = await chiTietDonHangRef.get();
+
+      if (!snapshot.empty) {
+        const chiTietDonHangList = await Promise.all(
+          snapshot.docs.map(async doc => {
+            const itemData = doc.data();
+            const bookDetails = await getBookById(doc.id);
+
+            if (bookDetails) {
+              return {
+                id: doc.id,
+                ...itemData,
+                bookDetails,
+              };
+            } else {
+              return {
+                id: doc.id,
+                ...itemData,
+                bookDetails: null,
+              };
+            }
+          }),
+        );
+
+        setChitietOrders(chiTietDonHangList);
+        setIsModalVisible(true);
+      } else {
+        console.log('Không có chi tiết đơn hàng');
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết đơn hàng:', error);
+    }
+  };
+
+  const fetchChiTietDonHangBiHuy = async orderId => {
+    try {
+      const chiTietDonHangRef = firestore()
+        .collection('ChiTietDonHangBiXoa')
+        .doc(orderId)
+        .collection('Items');
+
+      const snapshot = await chiTietDonHangRef.get();
+
+      if (!snapshot.empty) {
+        const chiTietDonHangList = await Promise.all(
+          snapshot.docs.map(async doc => {
+            const itemData = doc.data();
+            const bookDetails = await getBookById(doc.id);
+
+            if (bookDetails) {
+              return {
+                id: doc.id,
+                ...itemData,
+                bookDetails,
+              };
+            } else {
+              return {
+                id: doc.id,
+                ...itemData,
+                bookDetails: null,
+              };
+            }
+          }),
+        );
+
+        setChitietOrders(chiTietDonHangList);
+        setIsModalVisible(true);
+      } else {
+        console.log('Không có chi tiết đơn hàng');
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết đơn hàng:', error);
+    }
+  };
+
   const formatDate = timestamp => {
     if (timestamp instanceof firestore.Timestamp) {
       return timestamp.toDate().toLocaleString();
@@ -455,19 +537,54 @@ const OrderListScreen = () => {
 
       const donHangData = donHangDoc.data();
 
-      // Thêm vào DonHangBiXoa
+      // Thêm DonHang vào DonHangBiXoa
       await firestore()
         .collection('DonHangBiXoa')
-        .doc(donHangId) // Có thể dùng ID giống để theo dõi
+        .doc(donHangId) // Dùng ID giống để theo dõi
         .set({
           ...donHangData,
           deletedAt: firestore.FieldValue.serverTimestamp(), // Dấu thời gian xóa
         });
 
+      // Lấy các ChiTietDonHang liên quan đến DonHang này
+      const chiTietSnapshot = await firestore()
+        .collection('ChiTietDonHang')
+        .doc(donHangId)
+        .collection('Items') // Subcollection Items
+        .get();
+
+      if (!chiTietSnapshot.empty) {
+        const batch = firestore().batch(); // Batch xử lý các thao tác Firestore
+
+        chiTietSnapshot.forEach(doc => {
+          const chiTietData = doc.data();
+
+          // Thêm từng tài liệu ChiTietDonHang vào ChiTietDonHangBiHuy
+          const chiTietBiHuyRef = firestore()
+            .collection('ChiTietDonHangBiXoa')
+            .doc(donHangId)
+            .collection('Items')
+            .doc(doc.id);
+
+          batch.set(chiTietBiHuyRef, {
+            ...chiTietData,
+            deletedAt: firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Xóa tài liệu ChiTietDonHang trong subcollection Items
+          batch.delete(doc.ref);
+        });
+
+        // Commit batch
+        await batch.commit();
+      }
+
       // Xóa DonHang
       await firestore().collection('DonHang').doc(donHangId).delete();
 
-      console.log('Đơn hàng đã được xóa và thêm vào DonHangBiXoa.');
+      console.log(
+        'Đơn hàng và các chi tiết liên quan đã được xóa và lưu vào các collection tương ứng.',
+      );
     } catch (error) {
       console.error('Lỗi khi xóa đơn hàng:', error);
     }
@@ -507,7 +624,6 @@ const OrderListScreen = () => {
           ngayThanhToan: firestore.FieldValue.serverTimestamp(), // Thêm thời gian thanh toán
         });
       } else {
-        // Nếu đã có `ngayThanhToan`, không cập nhật lại
         console.log('Đã có ngày thanh toán, không cần cập nhật.');
       }
 
@@ -519,9 +635,39 @@ const OrderListScreen = () => {
         ...donHangData,
         tinhTrangDonHang: 3,
         tinhTrangThanhToan: 1,
-        // Chỉ duy trì `ngayThanhToan` nếu đã có, không ghi đè nó
-        ngayThanhToan: donHangData.ngayThanhToan,
+        ngayThanhToan:
+          donHangData.ngayThanhToan || firestore.FieldValue.serverTimestamp(),
       });
+
+      // Xử lý subcollection `ChiTietDonHang`
+      const chiTietSnapshot = await firestore()
+        .collection('ChiTietDonHang')
+        .doc(id)
+        .collection('Items')
+        .get();
+
+      if (!chiTietSnapshot.empty) {
+        const batch = firestore().batch();
+
+        chiTietSnapshot.forEach(doc => {
+          const chiTietData = doc.data();
+
+          // Thêm vào `ChiTietDonHangThanhCong`
+          const chiTietThanhCongRef = firestore()
+            .collection('ChiTietDonHangThanhCong')
+            .doc(id)
+            .collection('Items')
+            .doc(doc.id);
+
+          batch.set(chiTietThanhCongRef, chiTietData);
+
+          // Xóa tài liệu khỏi `ChiTietDonHang`
+          batch.delete(doc.ref);
+        });
+
+        // Commit batch
+        await batch.commit();
+      }
 
       // Xóa đơn hàng khỏi `DonHang`
       await donHangRef.delete();
@@ -537,7 +683,7 @@ const OrderListScreen = () => {
       // Xóa đơn hàng khỏi `DonHangShiper`
       await donHangShiperRef.delete();
 
-      console.log(`Hoàn tất xử lý đơn hàng với ID ${id}`);
+      console.log(`Hoàn tất xử lý đơn hàng và chi tiết đơn hàng với ID ${id}`);
     } catch (error) {
       console.error('Lỗi khi xử lý đơn hàng:', error);
     }
@@ -547,12 +693,19 @@ const OrderListScreen = () => {
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
-        setSelectedOrder(item); // Lưu thông tin đơn hàng được chọn
+        setSelectedOrder(item);
         setIsModalVisible(true);
-        fetchChiTietDonHang(item.id); // Hiển thị modal
+
+        if (selectedTab === 0 || selectedTab === 1 || selectedTab === 2) {
+          fetchChiTietDonHang(item.id);
+        } else if (selectedTab === 3) {
+          fetchChiTietDonHangThanhCong(item.id);
+        } else if (selectedTab === 4) {
+          fetchChiTietDonHangBiHuy(item.id);
+        }
       }}>
       <Text style={styles.modalTitle2}>Đơn hàng:</Text>
-      <Text style={[styles.modalTitle2,{marginBottom: 5}]}>{item.id}</Text>
+      <Text style={[styles.modalTitle2, {marginBottom: 5}]}>{item.id}</Text>
       <View style={styles.row}>
         <Text style={styles.title}>Trạng thái thanh toán: </Text>
         <View style={styles.lineContainer}>
@@ -1036,12 +1189,15 @@ const OrderListScreen = () => {
                       </Text>
                       <Image
                         source={{uri: item.bookDetails.anhSach}}
-                        resizeMode="contain"
+                        resizeMode="stretch"
                         style={styles.itemImage}
                       />
-                      <Text style={styles.itemQuantity}>{item.soLuong}</Text>
+                      <Text style={[styles.itemQuantity, {marginLeft: -30}]}>
+                        {item.soLuong}
+                      </Text>
                       <Text style={styles.itemPrice}>
                         {Number(item.giaMua * item.soLuong).toLocaleString()}{' '}
+                        VNĐ
                       </Text>
                     </View>
                   )}
@@ -1050,7 +1206,8 @@ const OrderListScreen = () => {
             )}
             <TouchableOpacity
               onPress={() => setIsModalVisible(false)}
-              style={styles.closeButton}>
+              style={styles.closeButton}
+              disabled={isLoading}>
               <Image
                 source={require('../../assets/closeqr.png')}
                 resizeMode="contain"
@@ -1161,9 +1318,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemImage: {
-    width: 60,
+    width: 50,
     height: 60,
-    borderRadius: 8,
+    borderRadius: 3,
     marginRight: 10,
   },
   closeButton: {
@@ -1290,8 +1447,8 @@ const styles = StyleSheet.create({
   cancel: {
     backgroundColor: '#F44336',
     position: 'absolute',
-    top: -230,
-    right: 10,
+    top: -190,
+    right: 1,
     padding: 5,
   },
   complete: {
